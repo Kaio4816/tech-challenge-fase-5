@@ -1,0 +1,6 @@
+# Mesmo bucket do primary (o state fica isolado pela "key", já fixada em
+# versions.tf como dr/terraform.tfstate) — copie para backend.hcl (gitignored):
+#   terraform -chdir=../../bootstrap output -raw bucket_name
+
+bucket = "solidarytech-tfstate-<account_id>"
+region = "us-east-1"

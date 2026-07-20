@@ -13,8 +13,11 @@ coverage.out
 .env
 *.env
 
-# Terraform (Fase 3+)
+# Terraform
 .terraform/
 *.tfstate
 *.tfstate.*
-.terraform.lock.hcl
+*.tfplan
+# .terraform.lock.hcl é versionado de propósito (pin de versão dos
+# providers) — não ignorar.
+**/backend.hcl

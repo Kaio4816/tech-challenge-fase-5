@@ -1,0 +1,8 @@
+# Copie para backend.hcl (gitignored) preenchendo com o output do bootstrap:
+#   terraform -chdir=../../bootstrap output -raw bucket_name
+#
+# Uso:
+#   terraform init -backend-config=backend.hcl
+
+bucket = "solidarytech-tfstate-<account_id>"
+region = "us-east-1"
