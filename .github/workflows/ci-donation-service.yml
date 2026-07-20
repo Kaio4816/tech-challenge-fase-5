@@ -150,6 +150,12 @@ jobs:
     # dependências (não só o "needs" direto) — como "sonar" fica skipped
     # em algum ponto da árvore, isso derrubava este job mesmo com build OK.
     if: always() && needs.build.result == 'success'
+    # Este job não faz checkout (só baixa o artefato da imagem), então
+    # apps/<serviço> (o working-directory padrão do workflow) nem existe
+    # no runner — sem isso os passos "run:" abaixo falham de cara.
+    defaults:
+      run:
+        working-directory: .
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -177,6 +183,10 @@ jobs:
       contents: read
     outputs:
       image: ${{ steps.image.outputs.image }}
+    # Mesmo motivo do scan-image: este job não faz checkout.
+    defaults:
+      run:
+        working-directory: .
     steps:
       - uses: actions/download-artifact@v4
         with:
