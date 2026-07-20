@@ -145,6 +145,11 @@ jobs:
     name: Trivy (imagem)
     runs-on: ubuntu-latest
     needs: build
+    # Sem função de status (always/success/...) no "if", o GitHub Actions
+    # aplica um "&& success()" implícito que olha a árvore INTEIRA de
+    # dependências (não só o "needs" direto) — como "sonar" fica skipped
+    # em algum ponto da árvore, isso derrubava este job mesmo com build OK.
+    if: always() && needs.build.result == 'success'
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -163,8 +168,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: scan-image
     # O ECR e a role OIDC só existem a partir da Fase 3 (Terraform). Até lá
-    # este job fica condicionado e não quebra o pipeline.
-    if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' && vars.AWS_ECR_ROLE_ARN != '' }}
+    # este job fica condicionado e não quebra o pipeline. always() evita o
+    # "&& success()" implícito, que olharia a árvore inteira (inclui o
+    # skip do sonar) em vez de só o "needs" direto.
+    if: always() && needs.scan-image.result == 'success' && github.ref == 'refs/heads/main' && github.event_name == 'push' && vars.AWS_ECR_ROLE_ARN != ''
     permissions:
       id-token: write
       contents: read
@@ -198,7 +205,8 @@ jobs:
     needs: push
     # O overlay do ArgoCD só existe a partir da Fase 4; até lá este job não
     # tem o que fazer porque o job "push" acima também fica condicionado.
-    if: ${{ needs.push.result == 'success' }}
+    # always() evita o "&& success()" implícito (ver comentário no job push).
+    if: always() && needs.push.result == 'success'
     permissions:
       contents: write
     # Reseta o working-directory padrão do workflow (apps/<serviço>) — este
