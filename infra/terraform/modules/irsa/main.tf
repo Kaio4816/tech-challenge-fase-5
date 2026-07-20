@@ -161,7 +161,10 @@ data "aws_iam_policy_document" "github_actions_trust" {
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_org}/${var.github_repo}:*"]
+      # O claim "sub" do GitHub inclui IDs numéricos imutáveis colados no
+      # nome (ex.: "repo:org@123/repo@456:ref:refs/heads/main"), não só
+      # "repo:org/repo:...". Os "*" cobrem esse sufixo em ambos os lados.
+      values = ["repo:${var.github_org}*/${var.github_repo}*:*"]
     }
   }
 }
