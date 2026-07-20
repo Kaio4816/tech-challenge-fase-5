@@ -120,6 +120,15 @@ jobs:
     name: Build da imagem
     runs-on: ubuntu-latest
     needs: [sast, sonar, sca]
+    # O job "sonar" fica "skipped" (não "success") quando o SonarCloud ainda
+    # não está configurado — por padrão o GitHub Actions propaga esse skip
+    # para quem depende dele. Sem este "if", o pipeline inteiro (build,
+    # scan-image, push, gitops) nunca rodaria até o SonarCloud existir.
+    if: |
+      always() &&
+      needs.sast.result == 'success' &&
+      needs.sca.result == 'success' &&
+      (needs.sonar.result == 'success' || needs.sonar.result == 'skipped')
     steps:
       - uses: actions/checkout@v4
       - name: Build
