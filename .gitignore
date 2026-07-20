@@ -2,8 +2,11 @@
 __pycache__/
 *.pyc
 .pytest_cache/
+.coverage
+coverage.xml
 
 # Go
+coverage.out
 /apps/*/donation-service
 
 # Segredos locais
