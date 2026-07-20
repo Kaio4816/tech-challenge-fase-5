@@ -114,8 +114,3 @@ def get_volunteers_by_ngo(ngo_id):
     except Exception as e:
         log.error(f"Erro ao buscar dados no DynamoDB: {e}")
         return jsonify({"error": "Erro interno"}), 500
-
-
-if __name__ == '__main__':
-    port = int(os.getenv("PORT", 8083))
-    app.run(host='0.0.0.0', port=port)
