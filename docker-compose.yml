@@ -1,0 +1,104 @@
+# Ambiente local dos 3 microsserviços da SolidaryTech, custo zero e sem
+# depender de conta AWS: Postgres real + DynamoDB Local no lugar do
+# DynamoDB/AWS de produção (que só entram na Fase 3, via Terraform).
+#
+# Uso:
+#   docker compose up --build
+#   curl localhost:8081/health   # ngo-service
+#   curl localhost:8082/health   # donation-service
+#   curl localhost:8083/health   # volunteer-service
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: solidarytech
+      POSTGRES_PASSWORD: solidarytech
+      POSTGRES_DB: postgres
+    volumes:
+      - ./scripts/postgres-init/10-init-databases.sh:/docker-entrypoint-initdb.d/10-init-databases.sh:ro
+      - ./apps/ngo-service/db/init.sql:/sql/ngo_init.sql:ro
+      - ./apps/donation-service/db/init.sql:/sql/donation_init.sql:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U solidarytech"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  dynamodb-local:
+    image: amazon/dynamodb-local:2.5.2
+    command: ["-jar", "DynamoDBLocal.jar", "-inMemory", "-sharedDb"]
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:8000 >/dev/null || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  dynamodb-init:
+    image: public.ecr.aws/aws-cli/aws-cli:2.17.24
+    depends_on:
+      dynamodb-local:
+        condition: service_healthy
+    environment:
+      AWS_ACCESS_KEY_ID: local
+      AWS_SECRET_ACCESS_KEY: local
+      AWS_REGION: us-east-1
+      AWS_DYNAMODB_ENDPOINT_URL: http://dynamodb-local:8000
+      AWS_DYNAMODB_TABLE: SolidaryTechVolunteers
+    entrypoint: ["/scripts/create-table.sh"]
+    volumes:
+      - ./scripts/dynamodb-init/create-table.sh:/scripts/create-table.sh:ro
+
+  ngo-service:
+    build: ./apps/ngo-service
+    environment:
+      PORT: 8081
+      DATABASE_URL: postgres://solidarytech:solidarytech@postgres:5432/ngo_db
+      # OTEL_EXPORTER_OTLP_ENDPOINT: https://otlp.nr-data.net:4318
+      # OTEL_EXPORTER_OTLP_HEADERS: api-key=SUA_LICENSE_KEY
+      # OTEL_SERVICE_NAME: ngo-service
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  donation-service:
+    build: ./apps/donation-service
+    environment:
+      PORT: 8082
+      DATABASE_URL: postgres://solidarytech:solidarytech@postgres:5432/donation_db
+      NGO_SERVICE_URL: http://ngo-service:8081
+      # AWS_REGION / AWS_SQS_URL: só necessárias para publicar eventos reais no SQS (Fase 3+)
+      # OTEL_EXPORTER_OTLP_ENDPOINT: https://otlp.nr-data.net:4318
+      # OTEL_EXPORTER_OTLP_HEADERS: api-key=SUA_LICENSE_KEY
+      # OTEL_SERVICE_NAME: donation-service
+    ports:
+      - "8082:8082"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ngo-service:
+        condition: service_started
+
+  volunteer-service:
+    build: ./apps/volunteer-service
+    environment:
+      PORT: 8083
+      AWS_REGION: us-east-1
+      AWS_DYNAMODB_TABLE: SolidaryTechVolunteers
+      AWS_DYNAMODB_ENDPOINT_URL: http://dynamodb-local:8000
+      AWS_ACCESS_KEY_ID: local
+      AWS_SECRET_ACCESS_KEY: local
+      # OTEL_EXPORTER_OTLP_ENDPOINT: https://otlp.nr-data.net:4318
+      # OTEL_EXPORTER_OTLP_HEADERS: api-key=SUA_LICENSE_KEY
+      # OTEL_SERVICE_NAME: volunteer-service
+    ports:
+      - "8083:8083"
+    depends_on:
+      dynamodb-init:
+        condition: service_completed_successfully

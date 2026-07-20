@@ -1,0 +1,9 @@
+.git
+.env
+*.md
+__pycache__/
+*.pyc
+tests/
+conftest.py
+requirements-dev.txt
+db/

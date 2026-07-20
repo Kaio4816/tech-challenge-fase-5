@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Go
+/apps/*/donation-service
+
+# Segredos locais
+.env
+*.env
+
+# Terraform (Fase 3+)
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
