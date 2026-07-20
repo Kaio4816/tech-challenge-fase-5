@@ -62,7 +62,7 @@ jobs:
       - name: Semgrep scan
         run: |
           pip install --quiet semgrep
-          semgrep scan --config auto --error apps/ngo-service
+          semgrep scan --config auto --error .
 
   sonar:
     name: SonarCloud
@@ -108,7 +108,7 @@ jobs:
           pip install --quiet pip-audit
           pip-audit -r requirements.txt
       - name: Trivy filesystem scan
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scan-ref: apps/ngo-service
@@ -142,7 +142,7 @@ jobs:
           name: image-${{ env.SERVICE_NAME }}
           path: /tmp
       - run: docker load -i /tmp/image.tar
-      - uses: aquasecurity/trivy-action@0.24.0
+      - uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ env.SERVICE_NAME }}:${{ env.IMAGE_TAG }}
           severity: HIGH,CRITICAL
