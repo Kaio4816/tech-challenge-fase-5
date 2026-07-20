@@ -1,0 +1,9 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: solidarytech
+resources:
+  - ../../../base/volunteer-service
+images:
+  - name: volunteer-service
+    newName: 712819938659.dkr.ecr.us-east-1.amazonaws.com/solidarytech/volunteer-service
+    newTag: latest

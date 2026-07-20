@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: donation-service
+  labels:
+    app.kubernetes.io/name: donation-service
+spec:
+  # Igual ao minReplicas do HPA (hpa.yaml) — a Application do ArgoCD ignora
+  # divergências em spec/replicas para esse Deployment, senão o self-heal do
+  # ArgoCD brigaria com o HPA toda vez que ele escalar.
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: donation-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: donation-service
+    spec:
+      serviceAccountName: donation-service
+      containers:
+        - name: donation-service
+          image: donation-service
+          ports:
+            - name: http
+              containerPort: 8082
+          env:
+            - name: PORT
+              value: "8082"
+            - name: NGO_SERVICE_URL
+              value: http://ngo-service:8081
+          envFrom:
+            - secretRef:
+                name: donation-service-secrets
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi

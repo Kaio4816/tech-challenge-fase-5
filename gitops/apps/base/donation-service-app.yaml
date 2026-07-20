@@ -1,0 +1,30 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: donation-service
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Kaio4816/tech-challenge-fase-5.git
+    targetRevision: main
+    # path é sobrescrito pelo overlay (apps/overlays/primary|dr).
+    path: gitops/workloads/overlays/primary/donation-service
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: solidarytech
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  # Sem isso, o self-heal do ArgoCD ficaria brigando com o HPA
+  # (gitops/workloads/base/donation-service/hpa.yaml) toda vez que ele
+  # escalar o Deployment para um valor diferente do spec/replicas versionado.
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      name: donation-service
+      jsonPointers:
+        - /spec/replicas

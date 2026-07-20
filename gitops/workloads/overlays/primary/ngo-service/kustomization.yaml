@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: solidarytech
+resources:
+  - ../../../base/ngo-service
+images:
+  # Tag "latest" até o CI (Fase 2) rodar de verdade e o job "gitops" trocar
+  # para a tag = SHA do commit. Sem a imagem publicada, o pod fica em
+  # ImagePullBackOff (esperado, não é bug do manifesto).
+  - name: ngo-service
+    newName: 712819938659.dkr.ecr.us-east-1.amazonaws.com/solidarytech/ngo-service
+    newTag: latest

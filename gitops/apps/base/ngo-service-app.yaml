@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ngo-service
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Kaio4816/tech-challenge-fase-5.git
+    targetRevision: main
+    # path é sobrescrito pelo overlay (apps/overlays/primary|dr) para
+    # apontar para o overlay correspondente em gitops/workloads/. Cada
+    # serviço tem seu próprio caminho (overlays/<env>/<serviço>) para não
+    # haver Applications diferentes gerenciando o mesmo recurso.
+    path: gitops/workloads/overlays/primary/ngo-service
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: solidarytech
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

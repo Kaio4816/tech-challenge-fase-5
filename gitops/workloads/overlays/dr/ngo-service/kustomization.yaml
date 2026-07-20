@@ -1,0 +1,11 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: solidarytech
+resources:
+  - ../../../base/ngo-service
+images:
+  # ECR replicado pelo módulo ecr (enable_replication) — mesmo nome de
+  # repositório, registry da região us-east-2.
+  - name: ngo-service
+    newName: 712819938659.dkr.ecr.us-east-2.amazonaws.com/solidarytech/ngo-service
+    newTag: latest

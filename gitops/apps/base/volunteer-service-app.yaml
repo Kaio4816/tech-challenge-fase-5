@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: volunteer-service
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Kaio4816/tech-challenge-fase-5.git
+    targetRevision: main
+    # path é sobrescrito pelo overlay (apps/overlays/primary|dr).
+    path: gitops/workloads/overlays/primary/volunteer-service
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: solidarytech
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
