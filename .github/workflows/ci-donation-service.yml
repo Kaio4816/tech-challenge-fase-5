@@ -201,12 +201,12 @@ jobs:
           curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
           sudo mv kustomize /usr/local/bin/
       - name: Atualizar tag da imagem (overlay primary)
-        working-directory: gitops/workloads/overlays/primary
+        working-directory: gitops/workloads/overlays/primary/donation-service
         run: kustomize edit set image ${{ env.SERVICE_NAME }}=${{ needs.push.outputs.image }}
       - name: Commit e push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add gitops/workloads/overlays/primary/kustomization.yaml
+          git add gitops/workloads/overlays/primary/donation-service/kustomization.yaml
           git diff --cached --quiet || git commit -m "chore(gitops): bump ${{ env.SERVICE_NAME }} para ${{ env.IMAGE_TAG }} [skip ci]"
           git push
