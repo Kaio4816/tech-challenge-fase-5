@@ -35,6 +35,17 @@ aws eks update-kubeconfig --region "${REGION}" --name "${CLUSTER_NAME}"
 echo "==> Garantindo o namespace ${NAMESPACE}..."
 kubectl create namespace "${NAMESPACE}" --dry-run=client -o yaml | kubectl apply -f -
 
+echo "==> Aplicando o schema (CREATE TABLE) nos dois databases..."
+# O Terraform (Fase 3) só cria os databases vazios via provider postgresql —
+# o schema em si é responsabilidade da aplicação/deploy, igual ao
+# docker-compose local. Idempotente (CREATE TABLE IF NOT EXISTS).
+docker run --rm -e PGPASSWORD="${RDS_PASSWORD}" \
+  -v "${REPO_ROOT}/apps/ngo-service/db/init.sql:/init.sql:ro" \
+  postgres:16-alpine psql -h "${RDS_HOST}" -U "${RDS_USER}" -d ngo_db -f /init.sql
+docker run --rm -e PGPASSWORD="${RDS_PASSWORD}" \
+  -v "${REPO_ROOT}/apps/donation-service/db/init.sql:/init.sql:ro" \
+  postgres:16-alpine psql -h "${RDS_HOST}" -U "${RDS_USER}" -d donation_db -f /init.sql
+
 echo "==> Criando/atualizando Secrets a partir dos outputs do Terraform..."
 kubectl -n "${NAMESPACE}" create secret generic ngo-service-secrets \
   --from-literal=DATABASE_URL="postgres://${RDS_USER}:${RDS_PASSWORD}@${RDS_HOST}:5432/ngo_db" \

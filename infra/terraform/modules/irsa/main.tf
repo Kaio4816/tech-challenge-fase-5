@@ -8,6 +8,15 @@
 # donation-service -> SQS
 # ---------------------------------------------------------------------------
 
+locals {
+  # A chave da condition tem que ser a URL do provider SEM o esquema
+  # (é assim que o aws_iam_openid_connect_provider registra o "Url" e é
+  # assim que a AWS nomeia as claims do token nas conditions). module.eks
+  # devolve cluster_oidc_issuer_url COM "https://" — sem tirar o prefixo, a
+  # condition nunca bate com nada e todo AssumeRoleWithWebIdentity falha.
+  eks_oidc_provider_host = replace(var.eks_oidc_provider_url, "https://", "")
+}
+
 data "aws_iam_policy_document" "donation_sa_trust" {
   statement {
     effect  = "Allow"
@@ -20,13 +29,13 @@ data "aws_iam_policy_document" "donation_sa_trust" {
 
     condition {
       test     = "StringEquals"
-      variable = "${var.eks_oidc_provider_url}:sub"
+      variable = "${local.eks_oidc_provider_host}:sub"
       values   = ["system:serviceaccount:${var.namespace}:donation-service"]
     }
 
     condition {
       test     = "StringEquals"
-      variable = "${var.eks_oidc_provider_url}:aud"
+      variable = "${local.eks_oidc_provider_host}:aud"
       values   = ["sts.amazonaws.com"]
     }
   }
@@ -68,13 +77,13 @@ data "aws_iam_policy_document" "volunteer_sa_trust" {
 
     condition {
       test     = "StringEquals"
-      variable = "${var.eks_oidc_provider_url}:sub"
+      variable = "${local.eks_oidc_provider_host}:sub"
       values   = ["system:serviceaccount:${var.namespace}:volunteer-service"]
     }
 
     condition {
       test     = "StringEquals"
-      variable = "${var.eks_oidc_provider_url}:aud"
+      variable = "${local.eks_oidc_provider_host}:aud"
       values   = ["sts.amazonaws.com"]
     }
   }
