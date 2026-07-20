@@ -4,6 +4,11 @@ resource "aws_ecr_repository" "this" {
   name                 = each.value
   image_tag_mutability = "MUTABLE"
 
+  # A infra é efêmera por design (custo mínimo, apply/destroy a cada demo) —
+  # sem isso, um repositório com qualquer imagem publicada trava o
+  # `terraform destroy` (a AWS recusa apagar repo ECR não-vazio).
+  force_delete = true
+
   image_scanning_configuration {
     scan_on_push = true
   }
