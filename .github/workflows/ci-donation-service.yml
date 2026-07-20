@@ -243,4 +243,3 @@ jobs:
           git add gitops/workloads/overlays/primary/donation-service/kustomization.yaml
           git diff --cached --quiet || git commit -m "chore(gitops): bump ${{ env.SERVICE_NAME }} para ${{ env.IMAGE_TAG }} [skip ci]"
           git push
-  # Trust policy OIDC corrigida (ver infra/terraform/modules/irsa) — validação Fase 4.
