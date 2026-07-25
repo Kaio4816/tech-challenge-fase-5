@@ -35,6 +35,10 @@ spec:
         singleBinary:
           replicas: 1
           persistence:
+            # Ver a nota em kube-prometheus-stack-app.yaml: o EKS não marca
+            # nenhuma StorageClass como default, então o PVC precisa nomear a
+            # `gp2` explicitamente ou fica Pending indefinidamente.
+            storageClass: gp2
             size: 10Gi
           resources:
             requests:

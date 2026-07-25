@@ -32,6 +32,12 @@ spec:
             storageSpec:
               volumeClaimTemplate:
                 spec:
+                  # O EKS entrega a StorageClass `gp2` mas NÃO a marca como
+                  # default (nenhuma SC tem a anotação is-default-class). Sem
+                  # `storageClassName` explícito o PVC fica Pending para
+                  # sempre e o StatefulSet não agenda -- foi exatamente o que
+                  # aconteceu na verificação da F5 contra o cluster real.
+                  storageClassName: gp2
                   accessModes: ["ReadWriteOnce"]
                   resources:
                     requests:
