@@ -7,6 +7,7 @@ import (
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.24.0"
@@ -46,6 +47,18 @@ func initTracing(ctx context.Context) (func(context.Context) error, error) {
 		sdktrace.WithResource(res),
 	)
 	otel.SetTracerProvider(tp)
+
+	// Sem isto o trace NÃO atravessa serviços. O propagador global padrão do
+	// OTel Go é no-op: o otelhttp.NewTransport do cliente (main.go) não injeta
+	// o header `traceparent`, o ngo-service recebe a requisição sem contexto e
+	// abre um trace novo. O sintoma engana, porque os spans chegam
+	// normalmente no backend -- só que em traces separados, um por serviço.
+	// Descoberto na verificação da F5 contra o New Relic real: nenhum trace
+	// tinha uniqueCount(service.name) > 1.
+	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(
+		propagation.TraceContext{},
+		propagation.Baggage{},
+	))
 
 	return tp.Shutdown, nil
 }
