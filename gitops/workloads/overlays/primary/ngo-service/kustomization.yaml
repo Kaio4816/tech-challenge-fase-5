@@ -9,4 +9,4 @@ resources:
 images:
 - name: ngo-service
   newName: 712819938659.dkr.ecr.us-east-1.amazonaws.com/solidarytech/ngo-service
-  newTag: 3343850ec1c782bf54f54db86d24366f65eccad4
+  newTag: 3170bcde7f11b13bdb21115ecd83c06ee107b149
