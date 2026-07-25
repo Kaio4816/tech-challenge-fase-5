@@ -4,3 +4,8 @@ resources:
   - ngo-service-app.yaml
   - donation-service-app.yaml
   - volunteer-service-app.yaml
+  - kube-prometheus-stack-app.yaml
+  - loki-app.yaml
+  - promtail-app.yaml
+  - nri-bundle-app.yaml
+  - platform-app.yaml

@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: platform
+  namespace: argocd
+  annotations:
+    # Depende dos CRDs ServiceMonitor/PrometheusRule instalados pelo
+    # kube-prometheus-stack-app.yaml (sync-wave "0").
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Kaio4816/tech-challenge-fase-5.git
+    targetRevision: main
+    path: gitops/platform
+  destination:
+    # Sem namespace fixo aqui: cada manifesto em gitops/platform/ já
+    # declara o seu (solidarytech para ServiceMonitors/PrometheusRules,
+    # monitoring para o dashboard do Grafana) — um valor fixo aqui faria
+    # o kustomize sobrescrever todos eles.
+    server: https://kubernetes.default.svc
+    namespace: solidarytech
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

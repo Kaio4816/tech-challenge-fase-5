@@ -1,0 +1,100 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: donation-service-slo
+  namespace: solidarytech
+  labels:
+    app.kubernetes.io/name: donation-service
+spec:
+  groups:
+    # SLI de disponibilidade: proporção de respostas não-5xx em POST
+    # /donations (o Hot Path). Ver docs/sre-slo.md para o SLO (99.9%/30d)
+    # e o cálculo do error budget (43.2 min/30d).
+    - name: donation-service.slo.recording
+      rules:
+        - record: donation_service:errors:ratio_rate5m
+          expr: |
+            sum(rate(http_requests_total{job="donation-service",path="/donations",status=~"5.."}[5m]))
+            /
+            sum(rate(http_requests_total{job="donation-service",path="/donations"}[5m]))
+        - record: donation_service:errors:ratio_rate30m
+          expr: |
+            sum(rate(http_requests_total{job="donation-service",path="/donations",status=~"5.."}[30m]))
+            /
+            sum(rate(http_requests_total{job="donation-service",path="/donations"}[30m]))
+        - record: donation_service:errors:ratio_rate1h
+          expr: |
+            sum(rate(http_requests_total{job="donation-service",path="/donations",status=~"5.."}[1h]))
+            /
+            sum(rate(http_requests_total{job="donation-service",path="/donations"}[1h]))
+        - record: donation_service:errors:ratio_rate6h
+          expr: |
+            sum(rate(http_requests_total{job="donation-service",path="/donations",status=~"5.."}[6h]))
+            /
+            sum(rate(http_requests_total{job="donation-service",path="/donations"}[6h]))
+    - name: donation-service.slo.alerting
+      rules:
+        # Multi-window multi-burn-rate (Google SRE Workbook) para SLO
+        # 99.9%/30d (budget de erro = 0.1%). Dois windows por severidade
+        # evitam disparar em picos curtos isolados sem sinal sustentado.
+        - alert: DonationServiceErrorBudgetBurnRateCritical
+          expr: |
+            donation_service:errors:ratio_rate5m > (14.4 * 0.001)
+            and
+            donation_service:errors:ratio_rate1h > (14.4 * 0.001)
+          for: 2m
+          labels:
+            severity: critical
+            service: donation-service
+          annotations:
+            summary: "donation-service: burn rate crítico do error budget (SLO 99.9%/30d)"
+            description: >-
+              Consumindo o error budget de 30 dias a uma taxa que o esgotaria
+              em menos de ~2 dias. Ratio de erro 5m={{ $value | humanizePercentage }}.
+        - alert: DonationServiceErrorBudgetBurnRateWarning
+          expr: |
+            donation_service:errors:ratio_rate30m > (6 * 0.001)
+            and
+            donation_service:errors:ratio_rate6h > (6 * 0.001)
+          for: 15m
+          labels:
+            severity: warning
+            service: donation-service
+          annotations:
+            summary: "donation-service: burn rate elevado do error budget (SLO 99.9%/30d)"
+            description: >-
+              Consumindo o error budget de 30 dias a uma taxa que o esgotaria
+              em menos de ~5 dias. Ratio de erro 30m={{ $value | humanizePercentage }}.
+        - alert: DonationServiceHighLatencyP95
+          expr: |
+            histogram_quantile(0.95,
+              sum(rate(http_request_duration_seconds_bucket{job="donation-service",path="/donations"}[5m])) by (le)
+            ) > 0.3
+          for: 5m
+          labels:
+            severity: warning
+            service: donation-service
+          annotations:
+            summary: "donation-service: p95 de latência acima do SLO (300ms) em /donations"
+            description: "p95 atual: {{ $value | humanizeDuration }}."
+    - name: solidarytech.platform.alerting
+      rules:
+        - alert: SolidaryTechPodCrashLooping
+          expr: |
+            max by (namespace, pod, container) (
+              kube_pod_container_status_waiting_reason{namespace="solidarytech", reason="CrashLoopBackOff"}
+            ) == 1
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Pod {{ $labels.pod }} em CrashLoopBackOff ({{ $labels.namespace }})"
+            description: "Container {{ $labels.container }} do pod {{ $labels.pod }} está reiniciando repetidamente."
+        - alert: SolidaryTechTargetDown
+          expr: up{job=~"donation-service|ngo-service|volunteer-service"} == 0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Target {{ $labels.job }} fora do ar (scrape falhando)"
+            description: "Prometheus não consegue coletar /metrics de {{ $labels.job }} ({{ $labels.instance }}) há mais de 2 minutos."

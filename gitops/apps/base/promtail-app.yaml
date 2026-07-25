@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: promtail
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://grafana.github.io/helm-charts
+    chart: promtail
+    # grafana/promtail está deprecated a favor do Grafana Alloy, mas
+    # mantido aqui por simplicidade de config (scrape padrão via
+    # kubernetes_sd_configs já cobre todos os pods/namespaces).
+    targetRevision: 6.17.1
+    helm:
+      releaseName: promtail
+      valuesObject:
+        config:
+          clients:
+            # Service "loki" (não "loki-gateway" — o gateway está
+            # desligado em loki-app.yaml) no namespace monitoring.
+            - url: http://loki.monitoring.svc.cluster.local:3100/loki/api/v1/push
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 150m
+            memory: 128Mi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

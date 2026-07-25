@@ -1,0 +1,47 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nri-bundle
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://helm-charts.newrelic.com
+    chart: nri-bundle
+    targetRevision: 8.0.8
+    helm:
+      releaseName: nri-bundle
+      valuesObject:
+        global:
+          cluster: solidarytech-primary-eks
+          lowDataMode: true
+          # Nunca commitar a license key em texto puro: o Secret abaixo é
+          # criado manualmente (não via Terraform/GitOps), o mesmo padrão
+          # usado para DATABASE_URL/SQS/DynamoDB em scripts/deploy-primary.sh.
+          #   kubectl -n monitoring create secret generic newrelic-license \
+          #     --from-literal=licenseKey=<NEW_RELIC_LICENSE_KEY>
+          customSecretName: newrelic-license
+          customSecretLicenseKey: licenseKey
+        newrelic-infrastructure:
+          enabled: true
+        nri-metadata-injection:
+          enabled: true
+        # nri-prometheus/newrelic-logging desligados: métricas já vão via
+        # OTLP direto dos apps (tracing.go/app.py) + kube-prometheus-stack;
+        # logs já vão via Loki/Promtail (gitops/apps/base/promtail-app.yaml).
+        # Duplicar aqui só custaria memória extra nos nós (risco #3 do
+        # PROJECT_SPEC).
+        nri-prometheus:
+          enabled: false
+        newrelic-logging:
+          enabled: false
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    # Sem automated: enquanto o Secret newrelic-license não existir (conta
+    # New Relic ainda pendente — ver CLAUDE.md), o app fica só criado e
+    # aguardando sync manual, sem entrar num loop de erro nem afetar as
+    # outras Applications.
+    syncOptions:
+      - CreateNamespace=true

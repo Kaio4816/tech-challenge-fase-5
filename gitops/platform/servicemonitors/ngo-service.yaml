@@ -1,0 +1,15 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: ngo-service
+  namespace: solidarytech
+  labels:
+    app.kubernetes.io/name: ngo-service
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ngo-service
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s

@@ -1,0 +1,159 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kube-prometheus-stack
+  namespace: argocd
+  annotations:
+    # Sync-wave anterior à Application "platform": os CRDs ServiceMonitor/
+    # PrometheusRule só existem depois que este chart (que os empacota via
+    # crds.enabled=true, default) sincroniza.
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: default
+  source:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    chart: kube-prometheus-stack
+    targetRevision: 87.19.0
+    helm:
+      releaseName: kube-prometheus-stack
+      valuesObject:
+        # kubeControllerManager/kubeScheduler/kubeEtcd não são scrapeáveis no
+        # EKS (control plane gerenciado pela AWS, sem endpoint exposto) —
+        # deixá-los ligados só gera TargetDown permanente e ruído de alerta.
+        kubeControllerManager:
+          enabled: false
+        kubeScheduler:
+          enabled: false
+        kubeEtcd:
+          enabled: false
+        prometheus:
+          prometheusSpec:
+            retention: 2d
+            storageSpec:
+              volumeClaimTemplate:
+                spec:
+                  accessModes: ["ReadWriteOnce"]
+                  resources:
+                    requests:
+                      storage: 10Gi
+            # false (em vez de nil) faz o operador usar selectors vazios,
+            # ou seja: recolhe ServiceMonitor/PrometheusRule de qualquer
+            # namespace, mesmo sem o label release=kube-prometheus-stack
+            # (nossos ServiceMonitors/PrometheusRules em gitops/platform/
+            # não carregam esse label de propósito, para não acoplar ao
+            # nome do release do chart).
+            serviceMonitorSelectorNilUsesHelmValues: false
+            podMonitorSelectorNilUsesHelmValues: false
+            ruleSelectorNilUsesHelmValues: false
+            resources:
+              requests:
+                cpu: 200m
+                memory: 512Mi
+              limits:
+                cpu: 500m
+                memory: 1Gi
+        alertmanager:
+          alertmanagerSpec:
+            resources:
+              requests:
+                cpu: 25m
+                memory: 64Mi
+              limits:
+                cpu: 100m
+                memory: 128Mi
+          # Estágio "Alerta" do fluxo de incidentes (docs/itsm-incident-flow.md):
+          # agrupamento, deduplicação e inibição. Sem isso, os 5 alertas de
+          # gitops/platform/prometheusrules/ chegariam como 5 notificações
+          # independentes do mesmo incidente.
+          config:
+            global:
+              resolve_timeout: 5m
+            route:
+              # Agrupar por serviço (não por pod/instance): um deploy ruim que
+              # derruba as 2 réplicas do donation-service é UM incidente.
+              group_by: ["alertname", "severity", "service"]
+              group_wait: 30s
+              group_interval: 5m
+              repeat_interval: 4h
+              receiver: plantao
+              routes:
+                # Watchdog é o alerta sintético do chart (dispara sempre, prova
+                # que o pipeline de alertas está vivo) — nunca deve notificar.
+                - matchers:
+                    - alertname = "Watchdog"
+                  receiver: "null"
+                # Crítico espera menos antes de agrupar: o MTTR conta desde o
+                # impacto, não desde a notificação.
+                - matchers:
+                    - severity = "critical"
+                  receiver: plantao
+                  group_wait: 10s
+            inhibit_rules:
+              # Enquanto o burn rate crítico do mesmo serviço estiver aberto,
+              # não notificar o warning (que dispara pelo mesmo sintoma, só com
+              # janela maior) — ruído puro em cima de um incidente já conhecido.
+              - source_matchers:
+                  - severity = "critical"
+                target_matchers:
+                  - severity = "warning"
+                equal: ["service"]
+            receivers:
+              - name: "null"
+              # Receiver sem integração de propósito: a entrega por e-mail do
+              # plantão é feita pelo Workflow do New Relic
+              # (infra/terraform/newrelic/), que já tem destination de e-mail
+              # gerenciado e não exige credenciais SMTP versionadas neste
+              # repositório. O Alertmanager aqui cumpre o papel de agregação,
+              # silenciamento e visualização (UI via port-forward). Para
+              # notificar direto daqui, adicionar `email_configs` a este
+              # receiver com as credenciais vindas de um Secret.
+              - name: plantao
+        prometheusOperator:
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+        grafana:
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          sidecar:
+            dashboards:
+              enabled: true
+              # Dashboards ficam em ConfigMaps no próprio namespace do
+              # Grafana (gitops/platform/dashboards) — evita precisar de
+              # RBAC cluster-wide (searchNamespace: ALL) para o sidecar.
+              label: grafana_dashboard
+              labelValue: "1"
+        kube-state-metrics:
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+        prometheus-node-exporter:
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
