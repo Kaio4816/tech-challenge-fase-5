@@ -14,6 +14,11 @@ output "rds_endpoint" {
   value = module.rds.endpoint
 }
 
+output "rds_instance_id" {
+  description = "Usado pelo scripts/activate-dr.sh para criar o snapshot a ser copiado cross-region."
+  value       = module.rds.db_instance_id
+}
+
 output "rds_master_username" {
   value = module.rds.master_username
 }

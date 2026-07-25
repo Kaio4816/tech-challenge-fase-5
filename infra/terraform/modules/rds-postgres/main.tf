@@ -50,8 +50,6 @@ resource "aws_security_group" "this" {
 }
 
 resource "random_password" "master" {
-  count = var.snapshot_identifier == null ? 1 : 0
-
   length  = 20
   special = false
 }
@@ -65,11 +63,15 @@ resource "aws_db_instance" "this" {
   allocated_storage = var.allocated_storage
   storage_type      = "gp3"
 
-  # Restaura de snapshot (DR) quando fornecido — username/senha/databases já
-  # vêm do snapshot, por isso ficam null nesse caso.
+  # Restaura de snapshot (DR) quando fornecido — username/databases já vêm do
+  # snapshot (por isso username fica null nesse caso: mudar o master username
+  # não é suportado num restore). A senha, porém, é sempre gerada pelo
+  # Terraform e resetada pela AWS logo após o restore (ModifyDBInstance) —
+  # assim o envs/dr nunca depende de conhecer a senha original do primary
+  # (que pode estar inacessível justamente num cenário de desastre real).
   snapshot_identifier = var.snapshot_identifier
   username            = var.snapshot_identifier == null ? var.master_username : null
-  password            = var.snapshot_identifier == null ? random_password.master[0].result : null
+  password            = random_password.master.result
 
   db_subnet_group_name   = aws_db_subnet_group.this.name
   vpc_security_group_ids = [aws_security_group.this.id]

@@ -15,7 +15,7 @@ output "master_username" {
 }
 
 output "master_password" {
-  value     = var.snapshot_identifier == null ? random_password.master[0].result : null
+  value     = random_password.master.result
   sensitive = true
 }
 
@@ -24,5 +24,10 @@ output "security_group_id" {
 }
 
 output "db_instance_id" {
-  value = aws_db_instance.this.id
+  # aws_db_instance.id é o DbiResourceId (formato "db-XXXX...", usado em ARNs
+  # de eventos), não o identifier legível — para comandos como
+  # `aws rds create-db-snapshot --db-instance-identifier`, precisa do
+  # .identifier (o mesmo valor de "identifier" no resource, ex.:
+  # "solidarytech-primary-postgres"). Achado rodando o ensaio de DR real.
+  value = aws_db_instance.this.identifier
 }
