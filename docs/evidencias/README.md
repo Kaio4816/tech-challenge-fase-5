@@ -29,3 +29,20 @@ usada, que é do plano free. As 2 policies e as 5 condições de alerta —
 incluindo as duas `baseline` (anomaly detection) — foram aplicadas por
 Terraform e estão ativas. Detalhes e encaminhamento na ação corretiva nº 7 do
 [post-mortem](../postmortem-mttr-demo.md).
+
+## Encerramento da janela
+
+`terraform destroy` do `envs/primary`: **`Destroy complete! Resources: 90 destroyed`**,
+sem nenhum erro e **sem a ENI órfã do VPC CNI** que travou o ciclo anterior
+(risco nº 1 do `PROJECT_SPEC` — não se materializou desta vez).
+
+**Armadilha na conferência de órfãos** (custou uma investigação e vale
+registrar): logo após o destroy, a Resource Groups Tagging API **ainda lista
+os ARNs de recursos já apagados** — instâncias, ENIs, volumes e NAT Gateway
+apareceram na consulta por `Key=Project,Values=SolidaryTech`. Consultando cada
+serviço diretamente, todos estavam `terminated` / `deleted` / inexistentes. A
+tagging API mantém o índice por até ~1h; **não use só ela para concluir que o
+destroy falhou** — confirme no `describe-*` do serviço correspondente.
+
+Restam de pé, por design: o bucket de state (`prevent_destroy`) e 4 chaves KMS
+em `PendingDeletion`, que a AWS remove sozinha ao fim da janela agendada.

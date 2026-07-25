@@ -1,2 +1,50 @@
 ==> Disparando carga contra http://localhost:8082/donations por 18m, concorrência 8...
 ==> Acompanhe o dashboard 'SolidaryTech - SRE Golden Metrics & SLO' no Grafana durante a execução.
+
+Summary:
+  Total:	1080.0003 secs
+  Slowest:	2.3753 secs
+  Fastest:	0.1279 secs
+  Average:	0.2786 secs
+  Requests/sec:	7459.6445
+  
+  Total data:	2823496 bytes
+  Size/request:	125 bytes
+
+Response time histogram:
+  0.128 [1]	|
+  0.353 [20756]	|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+  0.577 [37]	|
+  0.802 [13]	|
+  1.027 [8]	|
+  1.252 [74]	|
+  1.476 [5]	|
+  1.701 [0]	|
+  1.926 [2]	|
+  2.151 [1295]	|■■
+  2.375 [238]	|
+
+
+Latency distribution:
+  10%% in 0.1327 secs
+  25%% in 0.1334 secs
+  50%% in 0.1346 secs
+  75%% in 0.1371 secs
+  90%% in 0.1564 secs
+  95%% in 2.1297 secs
+  99%% in 2.1509 secs
+
+Details (average, fastest, slowest):
+  DNS+dialup:	0.0000 secs, 0.0000 secs, 0.0044 secs
+  DNS-lookup:	0.0000 secs, 0.0000 secs, 0.0023 secs
+  req write:	0.0000 secs, 0.0000 secs, 0.0007 secs
+  resp wait:	0.2785 secs, 0.1279 secs, 2.3750 secs
+  resp read:	0.0001 secs, 0.0000 secs, 0.0022 secs
+
+Status code distribution:
+  [201]	22429 responses
+
+Error distribution:
+  [8]	Post "http://localhost:8082/donations": EOF
+  [8033981]	Post "http://localhost:8082/donations": dial tcp [::1]:8082: connect: connection refused
+
