@@ -163,3 +163,15 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      # As CRDs do Prometheus Operator (prometheuses, alertmanagers,
+      # thanosrulers, prometheusagents, scrapeconfigs, alertmanagerconfigs)
+      # são grandes demais para o client-side apply: o kubectl grava o
+      # manifesto inteiro na anotação last-applied-configuration e estoura o
+      # limite de 262144 bytes ("metadata.annotations: Too long"). O sync
+      # falhava só nessas CRDs -- as 4 pequenas (servicemonitors,
+      # podmonitors, probes, prometheusrules) entravam normalmente, então o
+      # sintoma era enganoso: nossos ServiceMonitors eram aceitos mas o
+      # Prometheus nunca era criado, por faltar a CRD dele.
+      # ServerSideApply não usa aquela anotação e resolve sem Replace
+      # (que seria destrutivo: apagaria e recriaria as CRDs).
+      - ServerSideApply=true
