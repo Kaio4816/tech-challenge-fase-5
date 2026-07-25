@@ -18,6 +18,22 @@ module "eks" {
   vpc_id             = module.network.vpc_id
   private_subnet_ids = module.network.private_subnet_ids
   tags               = var.tags
+
+  # 4 nós (não 2) porque o limite real aqui é POD POR NÓ, não CPU/memória:
+  # o AWS VPC CNI aloca IPs de pod por ENI, e uma t3.medium comporta
+  # 3 ENIs x 6 IPs - 1 = 17 pods. Com a stack de observabilidade da F5
+  # (kube-prometheus-stack + Loki + Promtail + nri-bundle) os 2 nós
+  # originais bateram o teto com CPU em ~50% e memória em ~45%, e pods
+  # ficaram Pending com "Too many pods" -- sintoma que engana, porque
+  # `kubectl top` mostra o cluster folgado.
+  #
+  # Alternativa sem nós extras: ligar prefix delegation no addon vpc-cni
+  # (ENABLE_PREFIX_DELEGATION=true), que leva o teto a ~110 pods/nó a
+  # custo zero. Exige reciclar os nós para o kubelet recalcular --max-pods,
+  # então fica registrado como otimização de FinOps, não aplicada no meio
+  # da janela de verificação.
+  node_desired_size = 4
+  node_max_size     = 5
 }
 
 module "rds" {
