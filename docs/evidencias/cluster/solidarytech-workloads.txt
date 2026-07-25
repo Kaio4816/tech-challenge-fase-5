@@ -1,0 +1,8 @@
+NAME                                     READY   STATUS    RESTARTS   AGE
+pod/donation-service-58998c6486-rp6q8    1/1     Running   0          81m
+pod/donation-service-58998c6486-snz8t    1/1     Running   0          81m
+pod/ngo-service-69cd4599c8-m89v4         1/1     Running   0          7m41s
+pod/volunteer-service-5dd4b84594-6rgvz   1/1     Running   0          107m
+
+NAME                                                   REFERENCE                     TARGETS              MINPODS   MAXPODS   REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/donation-service   Deployment/donation-service   cpu: <unknown>/70%   2         4         2          107m

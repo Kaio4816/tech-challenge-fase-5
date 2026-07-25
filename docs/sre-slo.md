@@ -111,31 +111,46 @@ o dashboard **"SolidaryTech - SRE Golden Metrics & SLO (donation-service)"**:
 > reais, não um histórico de 30 dias real (que exigiria o cluster no ar
 > por 30 dias, incompatível com a estratégia de custo mínimo do projeto).
 
-## Demo de MTTR (roteiro)
+## Demo de MTTR — executada em 2026-07-25
 
-1. Gerar carga sustentada contra o hot path:
-   ```bash
-   kubectl -n solidarytech port-forward svc/donation-service 8082:8082 &
-   kubectl -n solidarytech port-forward svc/ngo-service 8081:8081 &
-   ./scripts/load-test.sh 10m 20
-   ```
-2. Com o dashboard aberto (Grafana) e a lista de alertas do Prometheus
-   visível, injetar uma falha real, por exemplo:
-   ```bash
-   kubectl -n solidarytech scale deploy/ngo-service --replicas=0
-   # ou: kubectl -n solidarytech delete pod -l app.kubernetes.io/name=donation-service
-   # ou: kustomize edit set image donation-service=<tag-quebrada> (via CI) + push
-   ```
-3. Observar: burn rate/latência sobem no dashboard → alerta dispara no
-   Prometheus (Alertmanager) → (quando a conta New Relic existir) anomalia
-   também sinalizada pelo Applied Intelligence.
-4. Observar a recuperação: self-heal do ArgoCD (`kubectl scale` de volta,
-   ou o HPA/liveness probe reiniciando o pod quebrado) ou rollback via
-   GitOps (revert do commit de imagem).
-5. Cronometrar do início do impacto (primeiro 5xx/latência alta no
-   dashboard) até a normalização (burn rate volta a < 1×) — meta: **MTTR
-   < 5 minutos**. Registrar o tempo medido e a causa em
-   [`postmortem-mttr-demo.md`](postmortem-mttr-demo.md) (o post-mortem já
-   está escrito com o cenário e as ações; faltam os campos cronometrados).
-   O fluxo completo de tratamento/comunicação do incidente está em
-   [`itsm-incident-flow.md`](itsm-incident-flow.md).
+O ensaio é automatizado por [`scripts/mttr-drill.sh`](../scripts/mttr-drill.sh);
+o post-mortem completo, com a linha do tempo medida em UTC e as três previsões
+que o ensaio refutou, está em
+[`postmortem-mttr-demo.md`](postmortem-mttr-demo.md). Evidência bruta em
+[`evidencias/mttr-detect/`](evidencias/mttr-detect/).
+
+```bash
+pkill -f port-forward   # túnel para pod morto invalida a medição
+NGO_ID=<id> BASELINE_SECS=120 ./scripts/mttr-drill.sh detect 18m 8
+```
+
+**Resultados medidos** (falha injetada: `ngo-service` escalado a 0 réplicas,
+sob carga de 8 conexões concorrentes em `POST /donations`):
+
+| Métrica | Medido | Meta |
+|---|---|---|
+| p95 de linha de base | 21 ms | < 300 ms |
+| p95 sob incidente | 1068 ms (em +54s) | — |
+| p95 após recuperação | 17 ms | < 300 ms |
+| **MTTD** | **424s (7min04s)** | — |
+| **MTTR** (recuperação do GitOps) | **37s** | < 5 min |
+| Alertas disparados | só `DonationServiceHighLatencyP95` | — |
+| Error budget consumido | **zero** | — |
+
+Três conclusões que mudam o entendimento do sistema:
+
+1. **A recuperação é ~11x mais rápida que a detecção** (37s contra 424s). Sem
+   retenção artificial, o `selfHeal` cura a falha ~6 min antes de o alerta
+   acender — este modo de falha é praticamente invisível ao alerting.
+2. **O fail-open foi comprovado**: indisponibilidade total da dependência
+   virou latência, não erro. Nenhum 5xx, nenhum burn rate, error budget
+   intacto.
+3. **`SolidaryTechTargetDown` não cobre "réplicas a zero"**: com 0 réplicas a
+   série `up` desaparece, e `up == 0` não casa com série ausente.
+
+**Cuidado ao reproduzir**: com `c=20` a linha de base já nasce em ~830ms
+(satura o `db.t4g.micro`) e o alerta passa a medir o gerador de carga em vez
+do incidente. Use `c=8`.
+
+O fluxo completo de tratamento/comunicação do incidente está em
+[`itsm-incident-flow.md`](itsm-incident-flow.md).

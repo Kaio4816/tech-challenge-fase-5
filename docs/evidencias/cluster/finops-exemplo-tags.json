@@ -1,0 +1,26 @@
+[
+    {
+        "Key": "Project",
+        "Value": "SolidaryTech"
+    },
+    {
+        "Key": "CostCenter",
+        "Value": "NGO-Core"
+    },
+    {
+        "Key": "kubernetes.io/cluster/solidarytech-primary-eks",
+        "Value": "shared"
+    },
+    {
+        "Key": "Environment",
+        "Value": "Production"
+    },
+    {
+        "Key": "kubernetes.io/role/internal-elb",
+        "Value": "1"
+    },
+    {
+        "Key": "Name",
+        "Value": "solidarytech-primary-vpc-private-us-east-1a"
+    }
+]

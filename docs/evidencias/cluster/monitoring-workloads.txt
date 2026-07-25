@@ -1,0 +1,25 @@
+NAME                                                            READY   STATUS    RESTARTS   AGE
+pod/alertmanager-kube-prometheus-stack-alertmanager-0           2/2     Running   0          5m49s
+pod/kube-prometheus-stack-grafana-c57495c88-vp7rq               3/3     Running   0          4m49s
+pod/kube-prometheus-stack-kube-state-metrics-65d4c66dbb-ltw4m   1/1     Running   0          23m
+pod/kube-prometheus-stack-operator-58cbb7dcd6-2s9vf             1/1     Running   0          12m
+pod/kube-prometheus-stack-prometheus-node-exporter-bbfsg        1/1     Running   0          23m
+pod/kube-prometheus-stack-prometheus-node-exporter-gnv5j        1/1     Running   0          23m
+pod/kube-prometheus-stack-prometheus-node-exporter-sv8df        1/1     Running   0          6m9s
+pod/kube-prometheus-stack-prometheus-node-exporter-ts7zw        1/1     Running   0          6m7s
+pod/loki-0                                                      2/2     Running   0          14m
+pod/nri-bundle-nri-metadata-injection-9f959d7b-c25vd            1/1     Running   0          13m
+pod/nri-bundle-nrk8s-ksm-6fbf6ffdf9-tjr67                       2/2     Running   0          13m
+pod/nri-bundle-nrk8s-kubelet-8rs2h                              2/2     Running   0          13m
+pod/nri-bundle-nrk8s-kubelet-lnw6g                              2/2     Running   0          6m7s
+pod/nri-bundle-nrk8s-kubelet-xrmhm                              2/2     Running   0          6m9s
+pod/nri-bundle-nrk8s-kubelet-zfmpq                              2/2     Running   0          13m
+pod/prometheus-kube-prometheus-stack-prometheus-0               2/2     Running   0          5m48s
+pod/promtail-d24m2                                              1/1     Running   0          5m56s
+pod/promtail-sn9h7                                              1/1     Running   0          5m53s
+pod/promtail-sx4x7                                              1/1     Running   0          24m
+pod/promtail-zspjf                                              1/1     Running   0          24m
+
+NAME                                                                                                                 STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+persistentvolumeclaim/prometheus-kube-prometheus-stack-prometheus-db-prometheus-kube-prometheus-stack-prometheus-0   Bound    pvc-62be8651-2d71-4f5a-8c1f-2f885722052d   10Gi       RWO            gp2            <unset>                 5m48s
+persistentvolumeclaim/storage-loki-0                                                                                 Bound    pvc-1bb57bc3-c317-4f07-821a-9656f84e49b7   10Gi       RWO            gp2            <unset>                 14m

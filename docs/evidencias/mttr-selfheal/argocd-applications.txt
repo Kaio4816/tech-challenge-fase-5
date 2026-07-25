@@ -1,0 +1,10 @@
+NAME                    SYNC STATUS   HEALTH STATUS   REVISION                                   PROJECT
+donation-service        Synced        Healthy         b949952477866e1826fee93131c68ef2deabdc39   default
+kube-prometheus-stack   Synced        Healthy         87.19.0                                    default
+loki                    Synced        Healthy         7.1.0                                      default
+ngo-service             Synced        Healthy         b949952477866e1826fee93131c68ef2deabdc39   default
+nri-bundle              Synced        Healthy         8.0.8                                      default
+platform                Synced        Healthy         b949952477866e1826fee93131c68ef2deabdc39   default
+promtail                Synced        Healthy         6.17.1                                     default
+solidarytech-root       Synced        Healthy         b949952477866e1826fee93131c68ef2deabdc39   default
+volunteer-service       Synced        Healthy         b949952477866e1826fee93131c68ef2deabdc39   default

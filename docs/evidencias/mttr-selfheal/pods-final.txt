@@ -1,0 +1,5 @@
+NAME                                 READY   STATUS    RESTARTS   AGE   IP            NODE                          NOMINATED NODE   READINESS GATES
+donation-service-58998c6486-rp6q8    1/1     Running   0          27m   10.0.84.62    ip-10-0-89-33.ec2.internal    <none>           <none>
+donation-service-58998c6486-snz8t    1/1     Running   0          27m   10.0.79.155   ip-10-0-76-194.ec2.internal   <none>           <none>
+ngo-service-69cd4599c8-g9wbw         1/1     Running   0          20m   10.0.86.152   ip-10-0-89-33.ec2.internal    <none>           <none>
+volunteer-service-5dd4b84594-6rgvz   1/1     Running   0          53m   10.0.89.212   ip-10-0-90-0.ec2.internal     <none>           <none>

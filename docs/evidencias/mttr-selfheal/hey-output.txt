@@ -1,0 +1,50 @@
+==> NGO_ID não definido — criando uma ONG de teste em http://localhost:8081/ngos...
+==> Usando NGO_ID=4
+==> Disparando carga contra http://localhost:8082/donations por 12m, concorrência 20...
+==> Acompanhe o dashboard 'SolidaryTech - SRE Golden Metrics & SLO' no Grafana durante a execução.
+
+Summary:
+  Total:	720.5008 secs
+  Slowest:	2.5012 secs
+  Fastest:	0.1328 secs
+  Average:	0.4666 secs
+  Requests/sec:	42.8466
+  
+  Total data:	3875328 bytes
+  Size/request:	125 bytes
+
+Response time histogram:
+  0.133 [1]	|
+  0.370 [13026]	|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+  0.606 [10281]	|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+  0.843 [7100]	|■■■■■■■■■■■■■■■■■■■■■■
+  1.080 [340]	|■
+  1.317 [20]	|
+  1.554 [1]	|
+  1.791 [1]	|
+  2.028 [0]	|
+  2.264 [96]	|
+  2.501 [5]	|
+
+
+Latency distribution:
+  10%% in 0.2909 secs
+  25%% in 0.3012 secs
+  50%% in 0.3991 secs
+  75%% in 0.6056 secs
+  90%% in 0.7043 secs
+  95%% in 0.7951 secs
+  99%% in 0.8986 secs
+
+Details (average, fastest, slowest):
+  DNS+dialup:	0.0000 secs, 0.0000 secs, 0.0041 secs
+  DNS-lookup:	0.0000 secs, 0.0000 secs, 0.0020 secs
+  req write:	0.0000 secs, 0.0000 secs, 0.0012 secs
+  resp wait:	0.4665 secs, 0.1326 secs, 2.5010 secs
+  resp read:	0.0001 secs, 0.0000 secs, 0.0020 secs
+
+Status code distribution:
+  [201]	30871 responses
+
+
+

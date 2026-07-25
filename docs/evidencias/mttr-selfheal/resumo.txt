@@ -1,0 +1,10 @@
+# Ensaio de MTTR -- modo selfheal
+
+Executado em: 2026-07-25T19:39:37Z (UTC)
+Baseline p95: 829 ms | p95 final: n/a ms
+
+MTTD = 3s
+Serviço recuperado em +17s
+MTTR = não fechado dentro de 1200s
+
+Alertas que dispararam: InfoInhibitor KubeAggregatedAPIDown CPUThrottlingHigh DonationServiceHighLatencyP95

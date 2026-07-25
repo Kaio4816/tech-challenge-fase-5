@@ -1,0 +1,7 @@
+NAME                                                     AGE
+servicemonitor.monitoring.coreos.com/donation-service    23m
+servicemonitor.monitoring.coreos.com/ngo-service         23m
+servicemonitor.monitoring.coreos.com/volunteer-service   23m
+
+NAME                                                        AGE
+prometheusrule.monitoring.coreos.com/donation-service-slo   23m

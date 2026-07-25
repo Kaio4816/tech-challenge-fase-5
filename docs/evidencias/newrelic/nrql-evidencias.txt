@@ -1,0 +1,57 @@
+# Evidências New Relic — conta 8324859, coletadas em 2026-07-25T19:16:33Z
+
+## Trace distribuído: traces com 2 serviços e 3 spans (donation -> ngo)
+[
+ {
+  "facet": "57ca9cf97759444621102b305038070f",
+  "servicos": 2,
+  "spans": 3,
+  "trace.id": "57ca9cf97759444621102b305038070f"
+ },
+ {
+  "facet": "f93d643221e81ed1df2f639526ae0d73",
+  "servicos": 2,
+  "spans": 3,
+  "trace.id": "f93d643221e81ed1df2f639526ae0d73"
+ },
+ {
+  "facet": "d32f06087335e90ef90391c1cd8620f1",
+  "servicos": 2,
+  "spans": 3,
+  "trace.id": "d32f06087335e90ef90391c1cd8620f1"
+ },
+ {
+  "facet": "2e8c9b92fe4eaf4d681007d8ca76f7a3",
+  "servicos": 2,
+  "spans": 3,
+  "trace.id": "2e8c9b92fe4eaf4d681007d8ca76f7a3"
+ }
+]
+
+## Spans por serviço
+[
+ {
+  "facet": "donation-service",
+  "count": 685,
+  "service.name": "donation-service"
+ },
+ {
+  "facet": "ngo-service",
+  "count": 512,
+  "service.name": "ngo-service"
+ },
+ {
+  "facet": "volunteer-service",
+  "count": 502,
+  "service.name": "volunteer-service"
+ }
+]
+
+## Infraestrutura Kubernetes via nri-bundle
+[
+ {
+  "containers": 41,
+  "nos": 4,
+  "pods": 55
+ }
+]

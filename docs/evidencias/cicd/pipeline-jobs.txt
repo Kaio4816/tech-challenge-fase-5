@@ -1,0 +1,45 @@
+
+✓ main CI - donation-service · 30170056055
+Triggered via push about 3 minutes ago
+
+JOBS
+✓ Build & Test in 27s (ID 89709555170)
+✓ SCA (govulncheck + trivy fs) in 43s (ID 89709595985)
+✓ SAST (Semgrep) in 21s (ID 89709595998)
+✓ SonarCloud in 37s (ID 89709596042)
+✓ Build da imagem in 51s (ID 89709662676)
+✓ Trivy (imagem) in 12s (ID 89709736810)
+✓ Push para ECR in 24s (ID 89709758929)
+✓ Atualizar imagem no GitOps in 7s (ID 89709797661)
+
+---
+
+✓ main CI - ngo-service · 30170056062
+Triggered via push about 3 minutes ago
+
+JOBS
+✓ Build & Test in 15s (ID 89709555211)
+✓ SonarCloud in 40s (ID 89709580920)
+✓ SCA (pip-audit + trivy fs) in 44s (ID 89709580932)
+✓ SAST (Semgrep) in 22s (ID 89709580946)
+✓ Build da imagem in 28s (ID 89709648063)
+✓ Trivy (imagem) in 20s (ID 89709689503)
+✓ Push para ECR in 31s (ID 89709721491)
+✓ Atualizar imagem no GitOps in 5s (ID 89709771314)
+
+---
+
+✓ main CI - volunteer-service · 30170056053
+Triggered via push about 3 minutes ago
+
+JOBS
+✓ Build & Test in 18s (ID 89709555125)
+✓ SAST (Semgrep) in 25s (ID 89709584081)
+✓ SCA (pip-audit + trivy fs) in 42s (ID 89709584088)
+✓ SonarCloud in 38s (ID 89709584100)
+✓ Build da imagem in 31s (ID 89709648958)
+✓ Trivy (imagem) in 32s (ID 89709695568)
+✓ Push para ECR in 21s (ID 89709744022)
+✓ Atualizar imagem no GitOps in 7s (ID 89709778193)
+
+---

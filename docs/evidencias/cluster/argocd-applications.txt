@@ -1,0 +1,10 @@
+NAME                    SYNC STATUS   HEALTH STATUS
+donation-service        Synced        Healthy
+kube-prometheus-stack   Synced        Healthy
+loki                    Synced        Healthy
+ngo-service             Synced        Healthy
+nri-bundle              Synced        Healthy
+platform                Synced        Healthy
+promtail                Synced        Healthy
+solidarytech-root       Synced        Healthy
+volunteer-service       Synced        Healthy
