@@ -243,3 +243,5 @@ jobs:
           git add gitops/workloads/overlays/primary/ngo-service/kustomization.yaml
           git diff --cached --quiet || git commit -m "chore(gitops): bump ${{ env.SERVICE_NAME }} para ${{ env.IMAGE_TAG }} [skip ci]"
           git push
+
+# Gatilho de rebuild: ECR recriado do zero na janela de verificação da F5 (2026-07-25).
