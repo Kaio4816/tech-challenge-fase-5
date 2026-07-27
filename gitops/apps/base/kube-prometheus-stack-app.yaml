@@ -157,6 +157,18 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
+  # O subchart do Grafana gera uma senha de admin aleatória a cada render do
+  # template, e o Deployment carrega o hash dela em `checksum/secret`. O valor
+  # muda em toda comparação, então o ArgoCD marca a Application como OutOfSync
+  # para sempre -- mesmo com tudo Healthy e nada de fato divergente. Ignorar
+  # só essa anotação mantém o drift real sendo detectado.
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      name: kube-prometheus-stack-grafana
+      namespace: monitoring
+      jsonPointers:
+        - /spec/template/metadata/annotations/checksum~1secret
   syncPolicy:
     automated:
       prune: true
