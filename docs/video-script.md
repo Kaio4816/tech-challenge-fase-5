@@ -118,9 +118,17 @@ kubectl -n solidarytech get pods
 
 **Na tela**: <https://github.com/Kaio4816/tech-challenge-fase-5/actions>
 
-1. Abrir o run mais recente de **CI - donation-service**. Apontar os **8 jobs
-   verdes**: `Build & Test → SAST (Semgrep) → SonarCloud → SCA →
-   Build da imagem → Trivy (imagem) → Push para ECR → Atualizar imagem no GitOps`.
+1. Abrir uma run de **CI - donation-service** — **use o filtro `Event: push`**,
+   não simplesmente "a mais recente". Reruns manuais (`workflow_dispatch`) têm
+   `Push para ECR` e `Atualizar imagem no GitOps` **cinza/`skipped`** por
+   desenho (guarda `github.event_name == 'push'`: rerun manual não empurra
+   imagem nem commita bump), e é justamente o fim da esteira que interessa
+   aqui. A run disparada no checklist de preparação serve — ela nasce de um
+   commit-gatilho real.
+
+   Apontar os **8 jobs verdes**: `Build & Test → SAST (Semgrep) → SonarCloud →
+   SCA → Build da imagem → Trivy (imagem) → Push para ECR →
+   Atualizar imagem no GitOps`.
 2. **Trivy — o portão de segurança da esteira.** Numa run verde a tabela do
    Trivy vem zerada, o que prova que o scan roda, mas **não** que ele bloqueia.
    Mostre as três coisas, nesta ordem:
