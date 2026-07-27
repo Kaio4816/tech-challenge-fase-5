@@ -6,4 +6,4 @@ resources:
 images:
 - name: donation-service
   newName: 712819938659.dkr.ecr.us-east-1.amazonaws.com/solidarytech/donation-service
-  newTag: 078f33633e161c333270d13f54680d8bcdee3c60
+  newTag: 7504328f4518bc14129ef891462d537e6d0e6c3f
