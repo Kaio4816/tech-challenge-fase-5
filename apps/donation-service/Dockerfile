@@ -12,7 +12,9 @@ RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /out/donation-service 
 # pipeline. A base real e a distroless da branch main:
 #     FROM gcr.io/distroless/static-debian12:nonroot
 FROM alpine:3.10
+RUN adduser -D -u 1000 appuser
 WORKDIR /app
 COPY --from=build /out/donation-service /app/donation-service
+USER appuser
 EXPOSE 8082
 ENTRYPOINT ["/app/donation-service"]
