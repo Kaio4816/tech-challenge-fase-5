@@ -121,7 +121,34 @@ kubectl -n solidarytech get pods
 1. Abrir o run mais recente de **CI - donation-service**. Apontar os **8 jobs
    verdes**: `Build & Test → SAST (Semgrep) → SonarCloud → SCA →
    Build da imagem → Trivy (imagem) → Push para ECR → Atualizar imagem no GitOps`.
-2. Abrir o job **Trivy (imagem)** — mostrar que `HIGH`/`CRITICAL` quebram o build.
+2. **Trivy — o portão de segurança da esteira.** Numa run verde a tabela do
+   Trivy vem zerada, o que prova que o scan roda, mas **não** que ele bloqueia.
+   Mostre as três coisas, nesta ordem:
+
+   a. **O portão**, em `.github/workflows/ci-donation-service.yml` (job
+      `scan-image`) — 3 linhas: `severity: HIGH,CRITICAL` (o que conta),
+      `exit-code: "1"` (o que **quebra**) e `ignore-unfixed: true` (só CVE com
+      correção publicada — bloquear pelo que ninguém pode corrigir só ensina o
+      time a ignorar o alerta).
+
+   b. **O log da run verde da `main`**: alvo `donation-service:<sha>` — a
+      imagem exata recém-construída — com `0` nas duas camadas (base + binário
+      Go), e `debian 12.15` com **4 pacotes**: é a distroless, sem shell.
+
+   c. **A prova do bloqueio** — [PR #1](https://github.com/Kaio4816/tech-challenge-fase-5/pull/1)
+      (aberto só como evidência, **não mergear**). Muda só a base da imagem
+      final para `alpine:3.10`. Abrir a aba **Checks**:
+
+      | Job | Resultado |
+      |---|---|
+      | `Build & Test`, `SAST`, `SonarCloud`, `SCA`, `Build da imagem` | ✅ verdes |
+      | `Trivy (imagem)` | ❌ `CVE-2021-36159` CRITICAL em `apk-tools`, `fixed 2.10.7-r0` → `Process completed with exit code 1` |
+      | `Push para ECR`, `Atualizar imagem no GitOps` | ⏭️ nunca executam (`needs: scan-image`) |
+
+   **Falar**: "o código Go é idêntico ao da `main` — mudou só a imagem base. O
+   Trivy achou uma CRITICAL **com correção disponível**, saiu com código 1, e
+   os dois jobs seguintes nem chegaram a existir: a imagem vulnerável não chega
+   ao registry, muito menos ao cluster."
 3. Abrir o job **Push para ECR** e apontar o `configure-aws-credentials`:
    **não existe `AWS_ACCESS_KEY_ID` em lugar nenhum**, a autenticação é OIDC.
 4. SonarCloud: <https://sonarcloud.io/project/overview?id=kaio4816_donation-service>
