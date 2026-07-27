@@ -241,8 +241,21 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add gitops/workloads/overlays/primary/ngo-service/kustomization.yaml
-          git diff --cached --quiet || git commit -m "chore(gitops): bump ${{ env.SERVICE_NAME }} para ${{ env.IMAGE_TAG }} [skip ci]"
-          git push
+          git diff --cached --quiet && exit 0
+          git commit -m "chore(gitops): bump ${{ env.SERVICE_NAME }} para ${{ env.IMAGE_TAG }} [skip ci]"
+          # Os 3 workflows (um por serviço) rodam em paralelo e commitam no
+          # mesmo branch, então quem chega depois leva "non-fast-forward". Sem
+          # este retry o bump do GitOps falha de forma intermitente -- e o pior
+          # é que a imagem JÁ foi para o ECR, deixando Git e registry
+          # dessincronizados.
+          for i in 1 2 3 4 5; do
+            git push && exit 0
+            echo "push rejeitado (tentativa $i) -- rebase e nova tentativa"
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+            sleep $((RANDOM % 5 + 2))
+          done
+          echo "::error::não foi possível empurrar o bump do GitOps após 5 tentativas"
+          exit 1
 
 # Gatilho de rebuild: ECR recriado do zero na janela de verificação da F5 (2026-07-25).
 
