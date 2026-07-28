@@ -140,7 +140,7 @@ data:
           "targets": [
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
-              "expr": "(1 - (sum(increase(http_requests_total{job=\"donation-service\",path=\"/donations\",status=~\"5..\"}[30d])) / sum(increase(http_requests_total{job=\"donation-service\",path=\"/donations\"}[30d])))) * 100",
+              "expr": "(1 - ((sum(increase(http_requests_total{job=\"donation-service\",path=\"/donations\",status=~\"5..\"}[30d])) or vector(0)) / sum(increase(http_requests_total{job=\"donation-service\",path=\"/donations\"}[30d])))) * 100",
               "legendFormat": "disponibilidade"
             }
           ]
@@ -170,7 +170,7 @@ data:
           "targets": [
             {
               "datasource": { "type": "prometheus", "uid": "prometheus" },
-              "expr": "clamp_min(1 - ((sum(increase(http_requests_total{job=\"donation-service\",path=\"/donations\",status=~\"5..\"}[30d])) / sum(increase(http_requests_total{job=\"donation-service\",path=\"/donations\"}[30d]))) / 0.001), 0) * 100",
+              "expr": "clamp_min(1 - (((sum(increase(http_requests_total{job=\"donation-service\",path=\"/donations\",status=~\"5..\"}[30d])) or vector(0)) / sum(increase(http_requests_total{job=\"donation-service\",path=\"/donations\"}[30d]))) / 0.001), 0) * 100",
               "legendFormat": "budget restante"
             }
           ]
