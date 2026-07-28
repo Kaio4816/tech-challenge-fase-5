@@ -186,13 +186,35 @@ kubectl -n solidarytech get pods
    > sem lock de versões resolvidas) e 1× `app.py:17` (regra S4502, "CSRF
    > desabilitado" — falso positivo: são APIs REST sem sessão por cookie). Se
    > perguntarem, é isso; nenhuma é achado de código.
-5. No histórico do repo, o commit
-   `chore(gitops): bump donation-service para <sha> [skip ci]` —
-   <https://github.com/Kaio4816/tech-challenge-fase-5/commit/c0149ca>.
-   Apontar o autor **`github-actions[bot]`** e a **única linha alterada**
-   (`newTag` no `kustomization.yaml` do overlay `primary`).
+5. **O commit que o pipeline escreveu** —
+   <https://github.com/Kaio4816/tech-challenge-fase-5/commit/c0149ca>
 
-**Apontar**: esse commit foi feito **pelo pipeline**, não por uma pessoa.
+   Percurso do cursor: título do commit → **autor** → o arquivo alterado →
+   a linha `newTag`.
+
+   **Falar**: "esse é o último passo da esteira, e é o mais importante para
+   entender o desenho: o pipeline **não** faz deploy. Ele faz *um commit*.
+   Repare no autor — `github-actions[bot]`. Nenhuma pessoa digitou isso.
+   Repare no tamanho: **um arquivo, uma linha**. É o `newTag` do
+   `kustomization.yaml` do overlay `primary`, ou seja, a esteira trocou a tag
+   da imagem do `donation-service` para o SHA que ela acabou de construir,
+   escanear e publicar no ECR.
+   E repare no `[skip ci]` no fim da mensagem: sem ele, esse commit dispararia
+   a esteira de novo, que faria outro commit, e assim por diante — laço
+   infinito. É um detalhe pequeno que só aparece quando você roda de verdade."
+
+   Se sobrar tempo, abrir o histórico só desse arquivo — uma coluna inteira de
+   commits do bot mostra que isso é rotina, não um caso isolado:
+   <https://github.com/Kaio4816/tech-challenge-fase-5/commits/main/gitops/workloads/overlays/primary/donation-service/kustomization.yaml>
+
+**Fechamento do bloco** (dizer olhando para o SHA na tela, é a deixa para o
+bloco 4):
+
+> "Então o que a esteira entrega não é software rodando — é **estado
+> declarado**. A imagem está no ECR, a intenção está no Git, e ninguém tocou
+> no cluster até aqui. Guarde esse SHA: `7504328f`. Daqui a pouco, no ArgoCD,
+> ele vai aparecer como a revisão sincronizada — é ali que o deploy realmente
+> acontece."
 
 > **Frase-chave**: "o pipeline não faz deploy — ele altera o Git. Quem faz
 > deploy é o ArgoCD."
