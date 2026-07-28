@@ -636,6 +636,29 @@ kubectl -n solidarytech top pods
 
 **Na tela**: `terraform destroy` iniciando.
 
+> ⚠️ **Não diga "zero recursos órfãos".** É a frase natural nesse momento e ela
+> não é verdadeira. O `terraform destroy` remove tudo que **ele** criou, mas os
+> discos EBS dos PVCs do Prometheus e do Loki são criados pelo driver CSI dentro
+> do cluster, não pelo Terraform. Ficam para trás, e como não herdam as tags do
+> projeto, a consulta `resourcegroupstaggingapi` também não os enxerga — foi
+> assim que dois discos por ciclo passaram despercebidos.
+>
+> Se a banca perguntar sobre limpeza, a resposta forte é a de baixo. Conhecer o
+> próprio ponto cego vale mais que uma afirmação absoluta que não se sustenta.
+
+> **Falar, se perguntarem sobre limpeza**: "A infraestrutura que o Terraform
+> gerencia some inteira com um comando. Mas tem um detalhe que eu descobri
+> conferindo o console: os discos que o Kubernetes cria sozinho, para o
+> Prometheus e o Loki, não são do Terraform. Eles ficam para trás.
+>
+> E o pior é que eles não herdam as etiquetas do projeto, então a consulta por
+> etiqueta, que eu usava para conferir sobras, não achava eles. Eu estava
+> conferindo com um método cego.
+>
+> Hoje o procedimento é apagar os volumes antes de destruir o ambiente, e a
+> conferência inclui listar disco solto, não só consultar por etiqueta. Está no
+> runbook."
+
 > **Falar**: "Eu encerro derrubando tudo. E isso faz parte da demonstração.
 >
 > Tudo que vocês viram custa mais ou menos **20 centavos de dólar por hora**
