@@ -159,9 +159,38 @@ kubectl -n solidarytech get pods
    ao registry, muito menos ao cluster."
 3. Abrir o job **Push para ECR** e apontar o `configure-aws-credentials`:
    **não existe `AWS_ACCESS_KEY_ID` em lugar nenhum**, a autenticação é OIDC.
-4. SonarCloud: <https://sonarcloud.io/project/overview?id=kaio4816_donation-service>
+4. **SonarCloud — o "SonarQube" do edital.** Comece pela visão da organização,
+   <https://sonarcloud.io/organizations/kaio4816/projects>: os **3 projetos**,
+   um por microsserviço, todos com **quality gate `Passed`**.
+
+   **Falar**: "o edital pede SonarQube; usei o SonarCloud, que é o mesmo motor
+   de análise entregue como serviço — grátis em repositório público e sem um
+   servidor para manter. São três projetos porque a chave é montada como
+   `<org>_<serviço>` no workflow: análises separadas, um quality gate por
+   serviço."
+
+   Depois entre no Hot Path,
+   <https://sonarcloud.io/project/overview?id=kaio4816_donation-service>, e
+   aponte: **quality gate Passed**, `0 bugs`, `0 vulnerabilities`,
+   `3 code smells`, **cobertura 25,3%**.
+
+   > ⚠️ **Não fuja da cobertura baixa** — a banca vai ver. Assuma:
+   > "cobertura de 25% no `donation-service` contra ~80% nos dois serviços
+   > Python. O teste cobre a regra de negócio da doação; o que está descoberto
+   > é integração — Postgres, SQS e a chamada ao `ngo-service` — que eu cubro
+   > com o `/ready` e com os SLOs em produção, não com teste unitário. É uma
+   > dívida consciente, não um esquecimento."
+
+   > ⚠️ Nos **dois serviços Python** aparecem `3 vulnerabilities` cada, e são
+   > as mesmas: 2× `Dockerfile:5` (`pip install` sem `--only-binary :all:` e
+   > sem lock de versões resolvidas) e 1× `app.py:17` (regra S4502, "CSRF
+   > desabilitado" — falso positivo: são APIs REST sem sessão por cookie). Se
+   > perguntarem, é isso; nenhuma é achado de código.
 5. No histórico do repo, o commit
-   `chore(gitops): bump donation-service para <sha> [skip ci]`.
+   `chore(gitops): bump donation-service para <sha> [skip ci]` —
+   <https://github.com/Kaio4816/tech-challenge-fase-5/commit/c0149ca>.
+   Apontar o autor **`github-actions[bot]`** e a **única linha alterada**
+   (`newTag` no `kustomization.yaml` do overlay `primary`).
 
 **Apontar**: esse commit foi feito **pelo pipeline**, não por uma pessoa.
 
