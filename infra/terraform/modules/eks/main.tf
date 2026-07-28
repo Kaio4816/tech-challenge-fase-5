@@ -28,6 +28,25 @@ module "eks" {
     metrics-server = {}
   }
 
+  # O addon metrics-server do EKS sobe com --secure-port=10251 (e nao 4443,
+  # que e o default do chart upstream). As regras padrao do modulo liberam
+  # 443/4443/6443/8443/9443/10250 do control plane para os nos, mas NAO a
+  # 10251 -- entao o api-server nao alcanca o pod e a APIService
+  # v1beta1.metrics.k8s.io fica Available=False. Sintoma: metrics-server
+  # Running e addon ACTIVE (sem "issues"), porem "kubectl top" devolve
+  # "Metrics API not available" e todo HPA fica em "cpu: <unknown>", sem
+  # nunca escalar. Confirmado no cluster real em 2026-07-27.
+  node_security_group_additional_rules = {
+    metrics_server = {
+      description                   = "Cluster API to node metrics-server"
+      protocol                      = "tcp"
+      from_port                     = 10251
+      to_port                       = 10251
+      type                          = "ingress"
+      source_cluster_security_group = true
+    }
+  }
+
   eks_managed_node_groups = {
     default = {
       instance_types = var.node_instance_types
