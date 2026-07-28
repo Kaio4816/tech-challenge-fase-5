@@ -72,7 +72,8 @@ kubectl -n monitoring get secret kube-prometheus-stack-grafana \
 - [ ] `./scripts/deploy-primary.sh` **com** `NEW_RELIC_LICENSE_KEY` definida.
 - [ ] `kubectl -n argocd get applications` → **9 Applications** `Synced`/`Healthy`.
 - [ ] Dados de seed criados (1 ONG + doações + 1 voluntário).
-- [ ] `hey` instalado (`brew install hey`).
+- [ ] `hey` e `jq` instalados (`brew install hey jq`) — o `jq` é usado no
+      bloco 5 para encadear o `id` da ONG na doação.
 - [ ] **Tags de alocação de custo ativadas em Billing** — leva até 24h para o
       Cost Explorer agrupar por tag. Se não deu tempo, use o Tag Editor, que é
       imediato (bloco 8).
@@ -248,19 +249,26 @@ precisa que eles façam. São três chamadas, e cada uma toca uma tecnologia
 diferente de persistência."
 
 ```bash
-# 1) criar uma ONG (guarde o "id" retornado)
-curl -s -X POST localhost:8081/ngos -H 'Content-Type: application/json' \
-  -d '{"name":"ONG Demo","email":"demo@ong.org","cause":"Educacao","city":"Sao Paulo"}'
+# 1) criar uma ONG — o id volta na variável, não precisa digitar nada depois
+NGO_ID=$(curl -s -X POST localhost:8081/ngos -H 'Content-Type: application/json' \
+  -d '{"name":"ONG Demo","email":"demo@ong.org","cause":"Educacao","city":"Sao Paulo"}' \
+  | jq -r .id)
+echo "ONG criada com id $NGO_ID"
 ```
 
 > **Falar**: "primeira: cadastro de ONG, no `ngo-service`, em Flask. Grava no
-> Postgres do RDS. Guardo o `id` que ele devolve, porque a próxima chamada
-> depende dele."
+> Postgres do RDS. Estou guardando numa variável o `id` que ele devolve,
+> porque a próxima chamada depende dele."
+
+> ⚠️ **Não use `"ngo_id": 1` fixo.** A tabela já tem os seeds do `init.sql` e
+> o `SERIAL` nunca recua, então a ONG criada na gravação **não** será a de id
+> 1 — a doação iria para outra ONG, não para a que apareceu na tela. Daí o
+> encadeamento por variável.
 
 ```bash
 # 2) doação usando esse id — Hot Path: valida o ngo_id chamando o ngo-service
 curl -s -X POST localhost:8082/donations -H 'Content-Type: application/json' \
-  -d '{"ngo_id": 1, "amount": 250.00, "donor_name": "Doador Demo"}'
+  -d "{\"ngo_id\": $NGO_ID, \"amount\": 250.00, \"donor_name\": \"Doador Demo\"}"
 ```
 
 > **Falar**: "segunda: a doação. Este é o **Hot Path**, em Go, e é o único
@@ -273,7 +281,7 @@ curl -s -X POST localhost:8082/donations -H 'Content-Type: application/json' \
 ```bash
 # 3) voluntário -> DynamoDB
 curl -s -X POST localhost:8083/volunteers -H 'Content-Type: application/json' \
-  -d '{"name":"Voluntario Demo","email":"vol@demo.org","ngo_id": 1}'
+  -d "{\"name\":\"Voluntario Demo\",\"email\":\"vol@demo.org\",\"ngo_id\": $NGO_ID}"
 ```
 
 > **Falar**: "terceira: voluntário, no `volunteer-service`, também Flask, mas
@@ -282,6 +290,21 @@ curl -s -X POST localhost:8083/volunteers -H 'Content-Type: application/json' \
 
 > ⚠️ `POST /volunteers` exige **`ngo_id`** — mandar `skill` no lugar devolve
 > `400 Campos obrigatórios ausentes`. Teste antes de gravar.
+
+> ⚠️ **`email` da ONG é `UNIQUE`.** Se você ensaiar este bloco e gravar
+> depois, o segundo `POST /ngos` com `demo@ong.org` devolve
+> **`409 E-mail já cadastrado`** e o `NGO_ID` vira `null`, derrubando as duas
+> chamadas seguintes. Entre uma tomada e outra, ou troque o e-mail, ou limpe
+> os registros (não há endpoint `DELETE` — só os três `POST`/`GET`):
+>
+> ```bash
+> cd infra/terraform/envs/primary
+> RDS_HOST="$(terraform output -raw rds_endpoint)"; RDS_HOST="${RDS_HOST%%:*}"
+> docker run --rm -e PGPASSWORD="$(terraform output -raw rds_master_password)" \
+>   -e PGCONNECT_TIMEOUT=10 postgres:16-alpine \
+>   psql -h "$RDS_HOST" -U "$(terraform output -raw rds_master_username)" \
+>   -d ngo_db -c "DELETE FROM ngos WHERE email = 'demo@ong.org';"
+> ```
 
 **Mostrar a persistência real** (prova de IRSA — nenhum pod tem access key):
 
