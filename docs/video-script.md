@@ -1,15 +1,18 @@
 # Roteiro do vídeo de demonstração
 
-Objetivo: demonstrar **funcionando** cada requisito do edital — a regra de
-avaliação é explícita ("não basta configurar"). Cada bloco abaixo traz, na
-ordem: **o que aparece na tela**, **o comando ou URL exato**, e **o que
-apontar** enquanto fala.
+Objetivo: mostrar cada requisito do edital **funcionando**. A regra de avaliação
+é explícita — não basta configurar.
 
 **Duração alvo: 12–15 min.**
 
-> Todos os números citados neste roteiro foram **medidos** contra a AWS real
-> em 2026-07-25. As evidências brutas estão em [`evidencias/`](evidencias/) e
-> podem ser abertas em tela se a banca pedir.
+> **Como usar este roteiro**: os blocos `> **Falar**` são para serem ditos em voz
+> alta, do jeito que estão. São frases curtas de propósito. Não decore: leia uma
+> vez antes de gravar, entenda a ideia e fale com suas palavras. Se travar,
+> volte para a frase escrita.
+
+> Todos os números citados foram **medidos** contra a AWS real em 26–28/07/2026.
+> As evidências estão em [`evidencias/relatorio/`](evidencias/relatorio/) e podem
+> ser abertas se a banca pedir.
 
 ---
 
@@ -17,8 +20,8 @@ apontar** enquanto fala.
 
 ### Terminais de port-forward
 
-Abra **um terminal por linha** e deixe rodando o vídeo inteiro. Se algum cair,
-a aba do navegador correspondente para de responder.
+Um terminal por linha, rodando o vídeo inteiro. Se algum cair, a aba
+correspondente para de responder.
 
 ```bash
 kubectl -n argocd       port-forward svc/argocd-server 8080:443
@@ -37,22 +40,18 @@ kubectl -n solidarytech port-forward svc/volunteer-service 8083:8083
 | **ArgoCD** | <https://localhost:8080> | `admin` / comando abaixo (aceite o aviso de certificado) |
 | **Grafana** | <http://localhost:3000> | `admin` / comando abaixo |
 | **Prometheus — alertas** | <http://localhost:9090/alerts> | — |
-| **Prometheus — regras** | <http://localhost:9090/rules> | — |
-| **Prometheus — targets** | <http://localhost:9090/targets> | — |
+| **Prometheus — regras** | <http://localhost:9090/rules?search=donation-service> | — |
+| **Prometheus — targets** | <http://localhost:9090/targets?search=solidarytech> | — |
 | **Alertmanager** | <http://localhost:9093> | — |
 | **Repositório** | <https://github.com/Kaio4816/tech-challenge-fase-5> | — |
-| **GitHub Actions** | <https://github.com/Kaio4816/tech-challenge-fase-5/actions> | sua conta GitHub |
-| **SonarCloud (org)** | <https://sonarcloud.io/organizations/kaio4816/projects> | login com GitHub |
-| **SonarCloud (Hot Path)** | <https://sonarcloud.io/project/overview?id=kaio4816_donation-service> | idem |
-| **New Relic** | <https://one.newrelic.com> | conta **8324859** |
-| **New Relic — tracing** | <https://one.newrelic.com/distributed-tracing> | filtrar `service.name = donation-service` |
-| **New Relic — alertas** | <https://one.newrelic.com/alerts> | policies `SolidaryTech - ...` |
-| **New Relic — NRQL** | <https://one.newrelic.com/data-exploration/query-builder> | consultas prontas no bloco 6 |
+| **GitHub Actions** | <https://github.com/Kaio4816/tech-challenge-fase-5/actions> | sua conta |
+| **PR do Trivy (evidência)** | <https://github.com/Kaio4816/tech-challenge-fase-5/pull/1/checks> | — |
+| **SonarCloud** | <https://sonarcloud.io/organizations/kaio4816/projects> | login com GitHub |
+| **New Relic — traces** | <https://one.newrelic.com/distributed-tracing> | conta **8324859** |
+| **New Relic — condições** | <https://one.newrelic.com/alerts/condition-builder/condition-list> | idem |
 | **AWS Tag Editor** | <https://us-east-1.console.aws.amazon.com/resource-groups/tag-editor/find-resources> | filtrar `Project = SolidaryTech` |
-| **AWS Cost Explorer** | <https://us-east-1.console.aws.amazon.com/cost-management/home#/cost-explorer> | agrupar por tag `CostCenter` |
-| **AWS EKS** | <https://us-east-1.console.aws.amazon.com/eks/clusters/solidarytech-primary-eks> | — |
 
-Senhas (rode antes, deixe copiadas):
+Senhas (rode antes e deixe copiadas):
 
 ```bash
 # ArgoCD
@@ -67,712 +66,626 @@ kubectl -n monitoring get secret kube-prometheus-stack-grafana \
 ### Checklist de preparação (30–40 min, **não** gravar)
 
 - [ ] `terraform apply` do `envs/primary` — 90 recursos.
-- [ ] CI disparada e verde (o ECR nasce vazio a cada apply; sem isso os pods
-      ficam em `ImagePullBackOff`).
+- [ ] CI disparada **por um commit real** e verde (o ECR nasce vazio a cada
+      apply; sem isso os pods ficam em `ImagePullBackOff`).
 - [ ] `./scripts/deploy-primary.sh` **com** `NEW_RELIC_LICENSE_KEY` definida.
 - [ ] `kubectl -n argocd get applications` → **9 Applications** `Synced`/`Healthy`.
 - [ ] Dados de seed criados (1 ONG + doações + 1 voluntário).
-- [ ] `hey` e `jq` instalados (`brew install hey jq`) — o `jq` é usado no
-      bloco 5 para encadear o `id` da ONG na doação.
-- [ ] **Tags de alocação de custo ativadas em Billing** — leva até 24h para o
-      Cost Explorer agrupar por tag. Se não deu tempo, use o Tag Editor, que é
-      imediato (bloco 8).
+- [ ] `hey` e `jq` instalados (`brew install hey jq`).
+- [ ] **Teste de carga rodando** antes de abrir o Grafana, senão os gráficos
+      aparecem chapados: `NGO_ID=1 ./scripts/load-test.sh 20m 8`
+- [ ] **Tags de alocação de custo ativadas em Billing** — leva até 24h. Se não
+      deu tempo, use o Tag Editor, que é imediato.
+- [ ] `pkill -f port-forward` e reabra os túneis (túnel velho aponta para pod
+      que já morreu).
 - [ ] Abas abertas e logadas conforme a tabela acima.
 
 ---
 
 ## Bloco 1 — Abertura e arquitetura (1 min)
 
-**Falar**: nome, RM, o que é a SolidaryTech e os 4 objetivos da diretoria
-(doações não param, custo controlado, resposta preditiva, SLO/SLA claros).
+**Na tela**: [`architecture.md`](architecture.md), o primeiro diagrama. Depois a
+raiz do repositório com `apps/`, `infra/`, `gitops/`, `docs/`.
 
-**Na tela**: [`architecture.md`](architecture.md), o primeiro diagrama Mermaid.
-Depois, a raiz do repositório mostrando `apps/`, `infra/`, `gitops/`, `docs/`.
+> **Falar**: "Oi. Eu sou o Kaio Henrique, RM367900.
+>
+> O desafio era pegar três microsserviços de uma ONG fictícia, a SolidaryTech, e
+> transformar isso num ecossistema completo. A diretoria pediu quatro coisas: que
+> as doações não parem nem se a nuvem falhar, custo controlado, resposta rápida a
+> problema, e metas de disponibilidade claras.
+>
+> Esse diagrama é a solução inteira. Vou percorrer ele rápido."
 
-**Apontar**: o `donation-service` no diagrama e a seta dele para o `ngo-service`.
+**Percurso do cursor**: GitHub → Actions → ECR → seta de volta pro GitHub →
+ArgoCD → namespace `solidarytech` → `donation-service` → seta pro `ngo-service`
+→ RDS/SQS/DynamoDB → namespace `monitoring` → New Relic.
 
-> **Frase-chave**: "o `donation-service` é o Hot Path — tudo que vem a seguir
-> gira em torno de manter esse caminho de pé."
+> **Falar**: "Aqui na esquerda, o código no GitHub. Qualquer commit dispara a
+> esteira: teste, análise de segurança, build, scan de imagem.
+>
+> A esteira entrega duas coisas. Uma imagem no ECR, e um commit de volta no
+> próprio Git. Repara: a esteira não encosta no cluster.
+>
+> Quem encosta no cluster é o ArgoCD, aqui dentro do EKS. Ele fica olhando o Git
+> e aplica o que mudou.
+>
+> Esses são os três serviços. Esse aqui, o `donation-service`, em Go, é o que eu
+> chamo de Hot Path. É o caminho crítico, é onde a doação acontece. Ele é o único
+> com escalonamento automático e é o alvo das metas de disponibilidade.
+>
+> E essa seta aqui é importante: antes de gravar a doação, ele consulta o
+> `ngo-service`. Guarda isso, porque essa seta volta duas vezes no vídeo.
+>
+> Os dados ficam fora do cluster, em serviços gerenciados. Postgres, fila e
+> DynamoDB, todos criados por Terraform.
+>
+> E embaixo a parte de monitoramento: Prometheus, Grafana, Loki, e o New Relic
+> recebendo os rastros das requisições."
+
+> **Frase de fechamento**: "O `donation-service` é o Hot Path. Tudo que vem
+> depois gira em torno de manter esse caminho de pé."
 
 ## Bloco 2 — Fundação: Docker, Terraform, EKS (2 min)
 
 **Na tela, nesta ordem**:
 
-1. `apps/donation-service/Dockerfile` — apontar **duas** linhas: o
-   `FROM golang:1.25-alpine AS builder` e a imagem final `distroless`
-   (sem shell dentro do container).
-2. `infra/terraform/modules/` — os 7 módulos. Abrir `modules/eks/main.tf` e
-   apontar `capacity_type` em **Spot**.
-3. Terminal:
+1. `apps/donation-service/Dockerfile`
+2. `infra/terraform/modules/` e depois `modules/eks/main.tf`
+3. Terminal
+
+> **Falar** (no Dockerfile): "Build em duas etapas. Em cima eu compilo o Go. Em
+> baixo, a imagem final: `distroless`. Ela não tem shell, não tem gerenciador de
+> pacote, não tem nada. Só o binário. Se alguém invadir esse container, não tem
+> nem `sh` para rodar comando."
+
+> **Falar** (nos módulos): "Sete módulos Terraform: rede, cluster, banco, fila,
+> tabela, registro de imagem e as permissões. Os mesmos módulos servem as duas
+> regiões, a principal e a de contingência. Aqui no módulo do cluster, olha o
+> tipo de instância: **Spot**. É 70% mais barato que sob demanda."
 
 ```bash
 kubectl get nodes -o wide
 kubectl -n solidarytech get pods
 ```
 
-**Apontar**: nós `Ready` e os 3 serviços `Running`.
+> **Falar**: "E aqui está de pé. Os nós prontos, os três serviços rodando."
 
-> **Frase-chave**: "nada aqui foi criado pelo console — cluster, banco, fila e
-> tabela saem todos de `terraform apply`."
+> **Frase de fechamento**: "Nada disso foi criado no console da AWS. Cluster,
+> banco, fila e tabela saem todos de um `terraform apply`."
 
-## Bloco 3 — CI/CD DevSecOps (2 min)
+## Bloco 3 — CI/CD e DevSecOps (3 min)
 
 **Na tela**: <https://github.com/Kaio4816/tech-challenge-fase-5/actions>
 
-1. Abrir uma run de **CI - donation-service** — **use o filtro `Event: push`**,
-   não simplesmente "a mais recente". Reruns manuais (`workflow_dispatch`) têm
-   `Push para ECR` e `Atualizar imagem no GitOps` **cinza/`skipped`** por
-   desenho (guarda `github.event_name == 'push'`: rerun manual não empurra
-   imagem nem commita bump), e é justamente o fim da esteira que interessa
-   aqui. A run disparada no checklist de preparação serve — ela nasce de um
-   commit-gatilho real.
+### 3.1 — A esteira completa
 
-   Apontar os **8 jobs verdes**: `Build & Test → SAST (Semgrep) → SonarCloud →
-   SCA → Build da imagem → Trivy (imagem) → Push para ECR →
-   Atualizar imagem no GitOps`.
-2. **Trivy — o portão de segurança da esteira.** Numa run verde a tabela do
-   Trivy vem zerada, o que prova que o scan roda, mas **não** que ele bloqueia.
-   Mostre as três coisas, nesta ordem:
+Abra uma run filtrando por **Event: push**. Não pegue a mais recente sem olhar:
+rerun manual deixa os dois últimos jobs cinza de propósito, e é justamente o fim
+da esteira que interessa.
 
-   a. **O portão**, em `.github/workflows/ci-donation-service.yml` (job
-      `scan-image`) — 3 linhas: `severity: HIGH,CRITICAL` (o que conta),
-      `exit-code: "1"` (o que **quebra**) e `ignore-unfixed: true` (só CVE com
-      correção publicada — bloquear pelo que ninguém pode corrigir só ensina o
-      time a ignorar o alerta).
+> **Falar**: "Essa é a esteira do `donation-service`, rodando de verdade. Oito
+> etapas, todas verdes.
+>
+> Teste com cobertura. Depois análise estática do código, procurando falha de
+> segurança. SonarCloud, que é a qualidade. Análise das dependências, procurando
+> biblioteca vulnerável. Aí builda a imagem, escaneia a imagem, envia pro
+> registro da AWS, e por último atualiza o Git."
 
-   b. **O log da run verde da `main`**: alvo `donation-service:<sha>` — a
-      imagem exata recém-construída — com `0` nas duas camadas (base + binário
-      Go), e `debian 12.15` com **4 pacotes**: é a distroless, sem shell.
+### 3.2 — O portão de segurança
 
-   c. **A prova do bloqueio** — [PR #1](https://github.com/Kaio4816/tech-challenge-fase-5/pull/1)
-      (aberto só como evidência, **não mergear**). Muda só a base da imagem
-      final para `alpine:3.10`. Abrir a aba **Checks**:
+> **Falar** (abrindo o job do Trivy no YAML): "Esse job aqui é um portão. Três
+> linhas definem ele.
+>
+> A primeira diz que só conta vulnerabilidade alta ou crítica. A segunda faz o
+> comando falhar quando encontra alguma. E a terceira ignora o que não tem
+> correção disponível — porque bloquear por algo que ninguém consegue arrumar só
+> ensina o time a ignorar o alerta.
+>
+> Agora, numa esteira verde esse job não prova nada. Ele mostra zero
+> vulnerabilidade e pronto. Então eu preparei uma prova."
 
-      | Job | Resultado |
-      |---|---|
-      | `Build & Test`, `SAST`, `SonarCloud`, `SCA`, `Build da imagem` | ✅ verdes |
-      | `Trivy (imagem)` | ❌ `CVE-2021-36159` CRITICAL em `apk-tools`, `fixed 2.10.7-r0` → `Process completed with exit code 1` |
-      | `Push para ECR`, `Atualizar imagem no GitOps` | ⏭️ nunca executam (`needs: scan-image`) |
+Abrir o **PR #1** → aba **Checks**.
 
-   **Falar**: "o código Go é idêntico ao da `main` — mudou só a imagem base. O
-   Trivy achou uma CRITICAL **com correção disponível**, saiu com código 1, e
-   os dois jobs seguintes nem chegaram a existir: a imagem vulnerável não chega
-   ao registry, muito menos ao cluster."
-3. Abrir o job **Push para ECR** e apontar o `configure-aws-credentials`:
-   **não existe `AWS_ACCESS_KEY_ID` em lugar nenhum**, a autenticação é OIDC.
-4. **SonarCloud — o "SonarQube" do edital.** Comece pela visão da organização,
-   <https://sonarcloud.io/organizations/kaio4816/projects>: os **3 projetos**,
-   um por microsserviço, todos com **quality gate `Passed`**.
+> **Falar**: "Esse pull request muda uma linha só: a imagem base do serviço, para
+> uma versão velha e vulnerável de propósito. O código Go é idêntico.
+>
+> Olha o resultado. Teste passou. Análise de segurança passou. Sonar passou.
+> Build passou. E o Trivy **falhou**: achou uma vulnerabilidade crítica, com
+> correção disponível.
+>
+> E o mais importante são esses dois aqui embaixo, em cinza: enviar pro registro
+> e atualizar o Git. Eles **nem rodaram**. A imagem vulnerável não chegou no
+> registro, muito menos no cluster."
 
-   **Falar**: "o edital pede SonarQube; usei o SonarCloud, que é o mesmo motor
-   de análise entregue como serviço — grátis em repositório público e sem um
-   servidor para manter. São três projetos porque a chave é montada como
-   `<org>_<serviço>` no workflow: análises separadas, um quality gate por
-   serviço."
+### 3.3 — Sem senha guardada
 
-   Depois entre no Hot Path,
-   <https://sonarcloud.io/project/overview?id=kaio4816_donation-service>, e
-   aponte: **quality gate Passed**, `0 bugs`, `0 vulnerabilities`,
-   `3 code smells`, **cobertura 25,3%**.
+> **Falar** (abrindo o job de push): "Um detalhe de segurança. Para enviar a
+> imagem pra AWS não existe chave de acesso nenhuma guardada no GitHub. A
+> autenticação é por OIDC: o GitHub prova quem ele é, e a AWS entrega um crachá
+> temporário. Não tem senha para vazar."
 
-   > ⚠️ **Não fuja da cobertura baixa** — a banca vai ver. Assuma:
-   > "cobertura de 25% no `donation-service` contra ~80% nos dois serviços
-   > Python. O teste cobre a regra de negócio da doação; o que está descoberto
-   > é integração — Postgres, SQS e a chamada ao `ngo-service` — que eu cubro
-   > com o `/ready` e com os SLOs em produção, não com teste unitário. É uma
-   > dívida consciente, não um esquecimento."
+### 3.4 — SonarCloud
 
-   > ⚠️ Nos **dois serviços Python** aparecem `3 vulnerabilities` cada, e são
-   > as mesmas: 2× `Dockerfile:5` (`pip install` sem `--only-binary :all:` e
-   > sem lock de versões resolvidas) e 1× `app.py:17` (regra S4502, "CSRF
-   > desabilitado" — falso positivo: são APIs REST sem sessão por cookie). Se
-   > perguntarem, é isso; nenhuma é achado de código.
-5. **O commit que o pipeline escreveu** —
-   <https://github.com/Kaio4816/tech-challenge-fase-5/commit/c0149ca>
+Abrir <https://sonarcloud.io/organizations/kaio4816/projects>.
 
-   Percurso do cursor: título do commit → **autor** → o arquivo alterado →
-   a linha `newTag`.
+> **Falar**: "O edital pede SonarQube. Eu usei o SonarCloud, que é o mesmo motor
+> entregue como serviço, de graça para repositório público.
+>
+> Um projeto por microsserviço, os três aprovados no quality gate. Zero bug.
+>
+> E aqui eu preciso ser honesto: a cobertura de teste do `donation-service` é
+> 25%, enquanto os dois em Python estão em 80%. O que está coberto é a regra de
+> negócio da doação. O que não está é integração — banco, fila, a chamada pro
+> outro serviço. Isso eu cubro com o `readiness probe` e com os alertas em
+> produção, não com teste unitário. É uma dívida que eu conheço."
 
-   **Falar**: "esse é o último passo da esteira, e é o mais importante para
-   entender o desenho: o pipeline **não** faz deploy. Ele faz *um commit*.
-   Repare no autor — `github-actions[bot]`. Nenhuma pessoa digitou isso.
-   Repare no tamanho: **um arquivo, uma linha**. É o `newTag` do
-   `kustomization.yaml` do overlay `primary`, ou seja, a esteira trocou a tag
-   da imagem do `donation-service` para o SHA que ela acabou de construir,
-   escanear e publicar no ECR.
-   E repare no `[skip ci]` no fim da mensagem: sem ele, esse commit dispararia
-   a esteira de novo, que faria outro commit, e assim por diante — laço
-   infinito. É um detalhe pequeno que só aparece quando você roda de verdade."
+### 3.5 — O commit que a esteira escreveu
 
-   Se sobrar tempo, abrir o histórico só desse arquivo — uma coluna inteira de
-   commits do bot mostra que isso é rotina, não um caso isolado:
-   <https://github.com/Kaio4816/tech-challenge-fase-5/commits/main/gitops/workloads/overlays/primary/donation-service/kustomization.yaml>
+Abrir <https://github.com/Kaio4816/tech-challenge-fase-5/commit/c0149ca>.
 
-**Fechamento do bloco** (dizer olhando para o SHA na tela, é a deixa para o
-bloco 4):
+> **Falar**: "Esse é o último passo, e é o que explica o desenho todo. A esteira
+> não faz deploy. Ela faz um commit.
+>
+> Olha o autor: `github-actions[bot]`. Nenhuma pessoa digitou isso.
+>
+> E olha o tamanho: um arquivo, uma linha. Ela trocou a tag da imagem para o
+> código que acabou de construir.
+>
+> Esse `[skip ci]` no final da mensagem evita laço infinito: sem ele, esse commit
+> dispararia a esteira de novo, que faria outro commit, e não parava mais."
 
-> "Então o que a esteira entrega não é software rodando — é **estado
-> declarado**. A imagem está no ECR, a intenção está no Git, e ninguém tocou
-> no cluster até aqui. Guarde esse SHA: `7504328f`. Daqui a pouco, no ArgoCD,
-> ele vai aparecer como a revisão sincronizada — é ali que o deploy realmente
-> acontece."
-
-> **Frase-chave**: "o pipeline não faz deploy — ele altera o Git. Quem faz
-> deploy é o ArgoCD."
+> **Frase de fechamento**: "A esteira não faz deploy. Ela mexe no Git. Quem faz
+> deploy é o ArgoCD. Guarda esse código aqui, `7504328`, que ele reaparece agora."
 
 ## Bloco 4 — GitOps ponta a ponta (2 min)
 
 **Na tela**: <https://localhost:8080> (ArgoCD)
 
-1. Vista de aplicações: `solidarytech-root` como app-of-apps e as
-   **9 Applications** `Healthy`/`Synced`. Clicar em `solidarytech-root` para
-   mostrar que ele gera as demais.
-2. **Self-heal ao vivo** — rápido e confiável:
+> **Falar**: "Aqui está o ArgoCD. Nove aplicações, todas `Synced` e `Healthy`.
+> Nenhuma fora de sincronia.
+>
+> Essa aqui, a `solidarytech-root`, é a raiz. Ela não sobe nada sozinha: ela
+> **gera** as outras oito. É o padrão app-of-apps. Se eu adicionar um serviço
+> novo no Git, ele aparece aqui sem eu tocar em nada.
+>
+> E repara na revisão sincronizada: é aquele mesmo código que a esteira commitou
+> há pouco. Os dois lados do ciclo se encontram aqui."
+
+**Self-heal ao vivo**:
 
 ```bash
 kubectl -n solidarytech scale deploy/volunteer-service --replicas=3
 kubectl -n solidarytech get pods -l app.kubernetes.io/name=volunteer-service -w
 ```
 
-**Narrar**: os 3 pods sobem, o ArgoCD marca `OutOfSync` e derruba de volta para
-1 — **sem ninguém digitar nada**. Esse laço foi medido em **37 segundos** no
-ensaio de MTTR.
+> **Falar**: "Agora eu vou fazer o que não se deve fazer: mexer no cluster na
+> mão. Vou subir esse serviço de uma para três réplicas.
+>
+> Subiu. Três pods.
+>
+> E agora o ArgoCD percebe que o cluster está diferente do Git, e desfaz. Volta
+> pra uma réplica. Eu não digitei nada.
+>
+> Esse laço foi medido em **37 segundos** no ensaio que eu vou mostrar daqui a
+> pouco."
 
-> **Frase-chave**: "o estado desejado está no Git; qualquer divergência é
+> **Frase de fechamento**: "O estado desejado está no Git. Qualquer divergência é
 > revertida sozinha."
 
-## Bloco 5 — Fluxo de negócio real (1 min)
+## Bloco 5 — O produto funcionando (1 min)
 
-**Abrir dizendo** (enquanto limpa o terminal): "até aqui mostrei esteira e
-plataforma. Agora o produto: os três microsserviços fazendo o que a ONG
-precisa que eles façam. São três chamadas, e cada uma toca uma tecnologia
-diferente de persistência."
+> **Falar**: "Até aqui foi esteira e plataforma. Agora o produto. São três
+> chamadas, e cada uma toca um banco diferente."
 
 ```bash
-# 1) criar uma ONG — o id volta na variável, não precisa digitar nada depois
-NGO_ID=$(curl -s -X POST localhost:8081/ngos -H 'Content-Type: application/json' \
+NGO_ID=$(curl -sS -X POST localhost:8081/ngos -H 'Content-Type: application/json' \
   -d '{"name":"ONG Demo","email":"demo@ong.org","cause":"Educacao","city":"Sao Paulo"}' \
   | jq -r .id)
 echo "ONG criada com id $NGO_ID"
 ```
 
-> **Falar**: "primeira: cadastro de ONG, no `ngo-service`, em Flask. Grava no
-> Postgres do RDS. Estou guardando numa variável o `id` que ele devolve,
-> porque a próxima chamada depende dele."
+> **Falar**: "Primeiro, cadastro de uma ONG. Isso vai pro Postgres. Estou
+> guardando o id numa variável porque a próxima chamada precisa dele."
 
-> ⚠️ **Não use `"ngo_id": 1` fixo.** A tabela já tem os seeds do `init.sql` e
-> o `SERIAL` nunca recua, então a ONG criada na gravação **não** será a de id
-> 1 — a doação iria para outra ONG, não para a que apareceu na tela. Daí o
-> encadeamento por variável.
+> ⚠️ **Não use `"ngo_id": 1` fixo.** A tabela já tem registros e o contador nunca
+> recua, então a ONG criada na gravação não será a de id 1.
 
 ```bash
-# 2) doação usando esse id — Hot Path: valida o ngo_id chamando o ngo-service
-curl -s -X POST localhost:8082/donations -H 'Content-Type: application/json' \
+curl -sS -X POST localhost:8082/donations -H 'Content-Type: application/json' \
   -d "{\"ngo_id\": $NGO_ID, \"amount\": 250.00, \"donor_name\": \"Doador Demo\"}"
 ```
 
-> **Falar**: "segunda: a doação. Este é o **Hot Path**, em Go, e é o único
-> serviço que fala com outro — antes de gravar, ele chama o `ngo-service` para
-> validar se essa ONG existe. Repare no `201 Created`: a doação foi para o
-> Postgres e, **depois do commit**, um evento foi publicado no SQS. Essa ordem
-> é deliberada e volta no bloco de DR: a doação existe antes da notificação,
-> então perder a fila num failover não perde doação."
+> **Falar**: "Agora a doação. Esse é o Hot Path. Ele valida a ONG chamando o
+> outro serviço, grava no banco, e só **depois** de gravar publica um evento na
+> fila.
+>
+> Essa ordem é de propósito: a doação existe antes da notificação. Isso volta no
+> bloco de contingência."
 
 ```bash
-# 3) voluntário -> DynamoDB
-curl -s -X POST localhost:8083/volunteers -H 'Content-Type: application/json' \
+curl -sS -X POST localhost:8083/volunteers -H 'Content-Type: application/json' \
   -d "{\"name\":\"Voluntario Demo\",\"email\":\"vol@demo.org\",\"ngo_id\": $NGO_ID}"
 ```
 
-> **Falar**: "terceira: voluntário, no `volunteer-service`, também Flask, mas
-> gravando em **DynamoDB** — banco diferente, para mostrar que a plataforma
-> não assume um único modelo de persistência."
-
-> ⚠️ `POST /volunteers` exige **`ngo_id`** — mandar `skill` no lugar devolve
-> `400 Campos obrigatórios ausentes`. Teste antes de gravar.
-
-> ⚠️ **`email` da ONG é `UNIQUE`.** Se você ensaiar este bloco e gravar
-> depois, o segundo `POST /ngos` com `demo@ong.org` devolve
-> **`409 E-mail já cadastrado`** e o `NGO_ID` vira `null`, derrubando as duas
-> chamadas seguintes. Entre uma tomada e outra, ou troque o e-mail, ou limpe
-> os registros (não há endpoint `DELETE` — só os três `POST`/`GET`):
->
-> ```bash
-> cd infra/terraform/envs/primary
-> RDS_HOST="$(terraform output -raw rds_endpoint)"; RDS_HOST="${RDS_HOST%%:*}"
-> docker run --rm -e PGPASSWORD="$(terraform output -raw rds_master_password)" \
->   -e PGCONNECT_TIMEOUT=10 postgres:16-alpine \
->   psql -h "$RDS_HOST" -U "$(terraform output -raw rds_master_username)" \
->   -d ngo_db -c "DELETE FROM ngos WHERE email = 'demo@ong.org';"
-> ```
-
-**Mostrar a persistência real** (prova de IRSA — nenhum pod tem access key):
+> **Falar**: "E um voluntário, que vai pro DynamoDB. Banco diferente, de
+> propósito."
 
 ```bash
 aws dynamodb scan --table-name SolidaryTechVolunteers --region us-east-1 \
   --query 'Items[].{nome:name.S,email:email.S}'
 ```
 
-> **Falar**: "e aqui está o voluntário, consultado direto na AWS — não é a
-> aplicação me contando que gravou, é o DynamoDB confirmando. E o ponto de
-> segurança: para escrever isso, o pod **não** tem chave de acesso nenhuma.
-> Nem em variável de ambiente, nem em Secret. Ele assume um role da AWS pela
-> identidade da própria ServiceAccount do Kubernetes — é o IRSA, criado pelo
-> Terraform no módulo `irsa`. Se alguém invadir o container, não há credencial
-> para roubar; e o role só permite escrever nessa tabela."
+> **Falar**: "E aqui está ele, consultado direto na AWS. Não é a aplicação me
+> dizendo que gravou. É o banco confirmando.
+>
+> E o detalhe de segurança: pra escrever isso, o pod não tem chave de acesso
+> nenhuma. Nem variável de ambiente, nem arquivo. Ele assume uma permissão da AWS
+> usando a identidade dele no Kubernetes. Se invadirem o container, não tem
+> credencial pra roubar."
 
-> **Frase-chave**: "o pod assume um role via IRSA — não existe credencial
-> estática em lugar nenhum do cluster."
+> ⚠️ Se você ensaiar este bloco, o e-mail `demo@ong.org` fica ocupado e a segunda
+> tentativa devolve erro 409. Troque o e-mail ou apague o registro antes.
 
 ## Bloco 6 — Observabilidade e SRE (3 min)
 
-> ⏱ **Dispare o ensaio de MTTR num terminal separado ANTES de começar este
-> bloco** — a detecção leva ~7 min e você volta a ele no bloco 7:
+> ⏱ **Dispare o ensaio de MTTR num terminal separado ANTES deste bloco.** A
+> detecção leva uns 7 minutos e você volta nele no bloco 7:
 > ```bash
 > NGO_ID=1 BASELINE_SECS=120 ./scripts/mttr-drill.sh detect 18m 8
 > ```
 
-**Na tela, nesta ordem**:
+### 6.1 — As metas
 
-1. [`sre-slo.md`](sre-slo.md) — os 2 SLIs, SLO **99,9%**, SLA **99,5%** e o
-   error budget de **43,2 min/30d**.
+Abrir [`sre-slo.md`](sre-slo.md).
 
-   > **Falar**: "SRE começa por decidir o que significa 'funcionando'. Defini
-   > dois indicadores para o Hot Path, medidos das próprias métricas do
-   > serviço: **disponibilidade** — proporção de respostas não-5xx em
-   > `POST /donations` — e **latência**, o p95 dessa mesma rota.
-   >
-   > O SLA com as ONGs parceiras é 99,5% ao mês. Mas o SLO interno é
-   > **99,9%** — mais rígido de propósito. A folga entre os dois é o tempo que
-   > a engenharia tem para agir antes de descumprir contrato.
-   >
-   > E 99,9% em 30 dias vira um número muito concreto: **43,2 minutos**. Esse
-   > é o **error budget** — quanto o serviço pode ficar ruim no mês sem violar
-   > o SLO. Não é uma meta de perfeição; é um orçamento, e orçamento existe
-   > para ser gasto. Enquanto sobra budget, dá para arriscar deploy; quando
-   > acaba, a prioridade vira confiabilidade."
+> **Falar**: "SRE começa decidindo o que significa 'funcionando'. Eu defini dois
+> indicadores para o Hot Path.
+>
+> Disponibilidade: quantas doações não deram erro. E latência: quanto tempo o p95
+> das requisições leva.
+>
+> O contrato com as ONGs é 99,5% no mês. Mas a minha meta interna é **99,9%**,
+> mais apertada de propósito. Essa folga entre as duas é o tempo que eu tenho pra
+> agir antes de furar o contrato.
+>
+> E 99,9% no mês vira um número bem concreto: **43 minutos**. Esse é o orçamento
+> de erro. É quanto o serviço pode ficar ruim no mês. Não é meta de perfeição, é
+> orçamento. E orçamento existe pra ser gasto: enquanto sobra, dá pra arriscar
+> deploy. Quando acaba, a prioridade vira estabilidade."
 
-2. **Grafana** <http://localhost:3000> → dashboard
-   *"SolidaryTech - SRE Golden Metrics & SLO"*, já sob a carga do ensaio.
+### 6.2 — O dashboard
 
-   > **Falar**: "esse dashboard é versionado como código — é um ConfigMap no
-   > Git, aplicado pelo ArgoCD, não algo que eu desenhei clicando na UI. Se o
-   > cluster for destruído e recriado, ele volta idêntico.
-   >
-   > Estão aqui as **golden metrics**: throughput — e repare que ele está
-   > subindo, porque tem um teste de carga rodando neste momento —, taxa de
-   > erro, e as latências p50, p95 e p99. Os três percentis juntos porque a
-   > média mente: dá para ter média ótima e 5% dos doadores esperando dois
-   > segundos.
-   >
-   > E este gauge é o que traduz tudo para linguagem de negócio: **error
-   > budget restante**. Não 'o serviço está bom'; e sim 'sobram tantos minutos
-   > de falha este mês'."
+Grafana → *"SolidaryTech - SRE Golden Metrics & SLO"*.
 
-3. **Prometheus** <http://localhost:9090/rules> → os 3 grupos do projeto:
-   `donation-service.slo.recording`, `donation-service.slo.alerting` e
-   `solidarytech.platform.alerting`.
+> **Falar**: "Esse painel é código. É um arquivo no Git aplicado pelo ArgoCD, não
+> algo que eu desenhei clicando. Se o cluster for destruído e recriado, ele volta
+> igual.
+>
+> Aqui em cima o volume de requisições, subindo porque tem um teste de carga
+> rodando agora. Do lado, a taxa de erro. E as latências: p50, p95 e p99.
+>
+> Os três juntos porque a média mente. Dá pra ter média ótima e 5% dos doadores
+> esperando dois segundos.
+>
+> E aqui embaixo é o que traduz tudo pra linguagem de negócio: disponibilidade em
+> 100%, orçamento de erro intacto, e a velocidade de consumo em zero."
 
-   > **Falar**: "as regras que alimentam aquilo. As de **recording**
-   > pré-calculam a taxa de erro em quatro janelas de tempo; as de
-   > **alerting** implementam *multi-window, multi-burn-rate*, que é a prática
-   > recomendada pelo Google SRE: um alerta crítico quando o orçamento queima
-   > a **14,4×** o ritmo sustentável — nesse ritmo os 43 minutos do mês
-   > acabam em dois dias — e um alerta de aviso a **6×**. Duas janelas em cada
-   > um, curta e longa, para não gritar por um pico de 30 segundos e ao mesmo
-   > tempo não demorar meia hora para perceber uma queda real."
+### 6.3 — As regras
 
-4. **New Relic — distributed tracing**:
-   <https://one.newrelic.com/distributed-tracing> → filtrar
-   `service.name = donation-service`, abrir um trace de `POST /donations` e
-   mostrar o span filho `GET /ngos/<int:ngo_id>` **rodando no `ngo-service`**:
-   dois serviços num único trace.
+Prometheus → <http://localhost:9090/rules?search=donation-service>
 
-   > **Falar**: "métrica diz *que* está lento; trace diz **onde**. Este é um
-   > `POST /donations` real. Repare na hierarquia: o span pai é o Go, e dentro
-   > dele há um span filho que está executando **no outro serviço**, o
-   > `ngo-service`, em Python. Dois processos, duas linguagens, dois pods —
-   > um único trace, porque o contexto viaja no cabeçalho HTTP.
-   >
-   > Isso não sai de graça: o OpenTelemetry em Go tem o propagador global
-   > desligado por padrão, e sem `SetTextMapPropagator` o cabeçalho
-   > `traceparent` não é injetado. O sintoma engana, porque a telemetria
-   > 'funciona' — chegam spans, aparecem os dois serviços — só que em traces
-   > separados. Foi um bug real que só apareceu olhando esta tela."
+> **Falar**: "São essas regras que alimentam aquilo. Elas implementam o que o
+> Google chama de multi-burn-rate.
+>
+> A ideia é simples: se o orçamento do mês está sendo gasto 14 vezes mais rápido
+> que o sustentável, ele acaba em dois dias. Isso é alerta crítico, acorda alguém.
+> Se está 6 vezes mais rápido, é aviso, vira tarefa pro dia seguinte.
+>
+> E cada um olha duas janelas de tempo ao mesmo tempo, uma curta e uma longa. É
+> pra não gritar por um pico de 30 segundos, e ao mesmo tempo não demorar meia
+> hora pra perceber uma queda de verdade."
 
-   Alternativa por consulta, no query builder
-   (<https://one.newrelic.com/data-exploration/query-builder>):
+### 6.4 — Rastreamento distribuído
 
-   ```sql
-   SELECT uniqueCount(service.name) AS servicos, count(*) AS spans
-   FROM Span WHERE name IN ('POST /donations','HTTP GET','GET /ngos/<int:ngo_id>')
-   FACET trace.id SINCE 30 minutes ago
-   ```
-   Cada linha deve mostrar **2 serviços e 3 spans**.
+New Relic → <https://one.newrelic.com/distributed-tracing>
 
-5. **Logs**: Grafana → *Explore* → datasource **Loki** → query
-   `{namespace="solidarytech"}`.
+> **Falar**: "Métrica diz que está lento. Rastro diz **onde**.
+>
+> Esse é um `POST /donations` de verdade. Olha esse mapa: o `donation-service`
+> chamando o `ngo-service`.
+>
+> E aqui embaixo a linha do tempo. O de cima é o Go, 48 milissegundos. E dentro
+> dele tem esse filho, de 2 milissegundos, que está rodando **no outro serviço**,
+> em Python.
+>
+> Dois processos, duas linguagens, dois pods. Um rastro só.
+>
+> E isso não veio de graça. O OpenTelemetry em Go vem com o propagador desligado
+> por padrão. Sem ligar ele, os rastros chegam, os dois serviços aparecem, mas
+> separados. Foi um bug real que eu só achei olhando essa tela."
 
-   > **Falar**: "e o terceiro pilar: logs dos três serviços centralizados no
-   > Loki, coletados por um DaemonSet do Promtail. Métrica, trace e log na
-   > mesma ferramenta — quem está de plantão não troca de aba no meio de um
-   > incidente."
+### 6.5 — Logs
 
-> **Frase-chave**: "o SLO é mais rígido que o SLA de propósito — a folga é o
-> tempo que temos para agir antes de descumprir o contrato com as ONGs."
+Grafana → *Explore* → datasource **Loki** → `{namespace="solidarytech"}`
 
-## Bloco 7 — MTTR: incidente do início ao fim (2,5 min) ⭐
+> **Falar**: "E o terceiro pilar: os logs dos três serviços num lugar só.
+> Métrica, rastro e log na mesma ferramenta. Quem está de plantão não fica
+> trocando de aba no meio de um incidente."
+
+> **Frase de fechamento**: "A meta interna é mais apertada que o contrato de
+> propósito. Essa folga é o tempo que a gente tem pra agir."
+
+## Bloco 7 — Um incidente do início ao fim (2,5 min) ⭐
 
 Volte ao terminal do ensaio disparado no bloco 6.
 
-**Na tela**: o terminal do `mttr-drill.sh` + <http://localhost:9090/alerts>.
+> **Falar**: "Tudo que eu mostrei está de pé e saudável. Agora eu quebro de
+> propósito, com cronômetro.
+>
+> O incidente é realista: eu derrubo o `ngo-service`, que é a dependência do
+> caminho crítico. Aquela seta do começo do vídeo."
 
-**Abrir dizendo**: "tudo que mostrei até agora está de pé e saudável. Agora eu
-quebro de propósito, com cronômetro, e mostro o ciclo inteiro: falha →
-detecção → alerta → recuperação → post-mortem. O incidente é realista: vou
-derrubar o `ngo-service`, a dependência do Hot Path."
+**Narrar conforme aparece**:
 
-**Narrar a linha do tempo conforme ela aparece**:
+| Momento | O que dizer |
+|---|---|
+| `T0_INICIO_IMPACTO` | "Aqui começa. A dependência sumiu." |
+| `DEGRADACAO_P95` (~+54s) | "Menos de um minuto depois, a latência sai de 21 milissegundos e vai pra quase 1 segundo." |
+| — | "Mas olha: **nenhuma doação falhou**. Continua gravando." |
+| `ALERTA_FIRING` (~+7min) | "**424 segundos** até o alerta disparar. Sete minutos. Esse é o tempo de detecção." |
+| `T3_RECUPERADO` | "E a recuperação: eu não fiz nada. O ArgoCD viu a divergência e restaurou. **37 segundos**." |
+| `T4_FIM_IMPACTO` | "Alerta resolvido, latência de volta a 17 milissegundos." |
 
-| Momento | O que apontar | O que dizer |
-|---|---|---|
-| `T0_INICIO_IMPACTO` | o `ngo-service` foi a zero réplicas | "aqui começa o impacto — a dependência do Hot Path acabou de sumir" |
-| `DEGRADACAO_P95` (~+54s) | p95 salta de **21ms para ~1000ms** — mostrar no Grafana | "54 segundos depois o p95 salta de 21 milissegundos para cerca de 1 segundo — o Hot Path está esperando o timeout de 2s da dependência" |
-| — | **nenhuma doação falhou**: `curl -s localhost:8082/donations \| tail -c 300` continua gravando | "e este é o ponto: **nenhuma doação falhou**. A validação é *fail-open* — só um 404 explícito rejeita. A dependência caiu, e a doação continua sendo gravada. A regra da diretoria era 'as doações não podem parar', e isso vale também para uma falha interna nossa" |
-| `ALERTA_FIRING` (~+7min) | `DonationServiceHighLatencyP95` fica vermelho em `/alerts` | "**424 segundos** — 7 minutos — para o alerta sair de `Pending` para `Firing`. Esse é o MTTD, o tempo de detecção" |
-| `T3_RECUPERADO` | ArgoCD restaura o serviço — **37s** após ser liberado | "e agora a recuperação: eu não fiz nada. `replicas: 1` está no Git, o ArgoCD viu a divergência e restaurou. **37 segundos**" |
-| `T4_FIM_IMPACTO` | alertas resolvidos, p95 volta a ~17ms | "alerta resolvido, p95 de volta a 17 milissegundos" |
+### Os três pontos que valem nota
 
-**Os três pontos que a banca precisa ouvir** — dizer explicitamente, são o
-conteúdo do bloco:
+> **Falar (1)**: "Repara no que **não** aconteceu. Nenhum alerta de erro.
+>
+> Porque a validação é o que se chama fail-open: se o outro serviço cai, a doação
+> é gravada mesmo assim. Só um 'ONG não existe' explícito rejeita.
+>
+> Então a queda da dependência virou **lentidão, não erro**. E como o orçamento
+> de erro está ligado a falha, ele saiu **intacto** do incidente.
+>
+> Isso tem uma consequência prática: quem for investigar isso procurando erro vai
+> procurar no lugar errado. Está escrito no runbook por causa disso."
 
-1. **Só o alerta de latência disparou** — nenhum de erro, nenhum de burn rate.
+> **Falar (2)**: "E aqui o achado mais interessante, que é meio desconfortável.
+>
+> Detectar levou 424 segundos. Recuperar levou 37. A recuperação é onze vezes
+> mais rápida que a detecção.
+>
+> Ou seja: se eu não segurasse o incidente de propósito, o sistema **se curava
+> antes de perceber que estava doente**. É ótimo pro usuário e péssimo pra quem
+> opera, porque falha que não deixa rastro é falha que se repete."
 
-   > **Falar**: "repare no que **não** aconteceu: nenhum alerta de erro,
-   > nenhum de burn rate. Porque o fail-open transformou indisponibilidade da
-   > dependência em **latência, não em erro** — e como o error budget está
-   > atrelado ao SLI de disponibilidade, ele saiu **intacto** do incidente.
-   > Uma consequência prática que muda a triagem: quem for investigar isso
-   > procurando 5xx vai procurar no lugar errado. Está documentado no runbook
-   > exatamente por isso."
-
-2. **MTTD 424s contra MTTR 37s** — a recuperação é ~11× mais rápida que a
-   detecção.
-
-   > **Falar**: "e aqui está o achado mais interessante do ensaio, que é
-   > desconfortável e por isso vale mais: detectar levou 424 segundos;
-   > recuperar levou 37. A recuperação é **onze vezes mais rápida que a
-   > detecção**. O que isso significa é que, se eu não segurasse o incidente
-   > artificialmente, o sistema **se curaria antes de perceber que estava
-   > doente** — e esse modo de falha seria praticamente invisível para o
-   > alerting. É ótimo para o usuário e péssimo para quem opera: falha que não
-   > deixa rastro é falha que se repete."
-
-3. Isso é **lacuna real revelada pelo ensaio**, registrada como ação corretiva
-   em [`postmortem-mttr-demo.md`](postmortem-mttr-demo.md).
-
-   > **Falar**: "não descobri isso no papel — descobri rodando, e virou ação
-   > corretiva no post-mortem, com dono. Aliás, o ensaio **refutou três
-   > previsões** que eu tinha escrito antes: eu achava que o alerta de
-   > `TargetDown` cobriria réplicas a zero, e não cobre — com zero réplicas a
-   > série `up` simplesmente **some**, e ausência de série não satisfaz
-   > `up == 0`. Eu achava que o ArgoCD teria um piso de 3 minutos pelo
-   > intervalo de reconciliação, e não tem — o self-heal é por watch, deu 37
-   > segundos. Ensaio que só confirma o que você já achava não estava medindo
-   > nada."
+> **Falar (3)**: "Eu não descobri isso no papel. Descobri rodando. E virou ação
+> corretiva no post-mortem, com dono.
+>
+> Aliás, o ensaio derrubou duas coisas que eu tinha escrito antes. Eu achava que
+> um dos alertas ia cobrir 'zero réplicas', e não cobre — com zero réplica a série
+> some, e ausência não é o mesmo que zero. E eu achava que o ArgoCD ia levar uns
+> 3 minutos, e levou 37 segundos.
+>
+> Ensaio que só confirma o que você já achava não mediu nada."
 
 > ⚠️ **Não prometa o que não vai acontecer**: `SolidaryTechTargetDown` **não**
-> dispara neste cenário (com 0 réplicas a série `up` some, e `up == 0` não casa
-> com série ausente), e **não haverá e-mail do New Relic** — o Workflow não pôde
-> ser criado no plano free. Os dois estão explicados no post-mortem; citar como
-> achado é mais forte do que omitir e ser perguntado.
+> dispara nesse cenário, e **não haverá e-mail do New Relic** — o roteamento
+> automático é bloqueado no plano gratuito. Citar como achado é mais forte do que
+> omitir e ser perguntado.
 
-> **Frase-chave**: "detectamos em 7 minutos e recuperamos em 37 segundos, sem
-> intervenção humana — e o ensaio mostrou que o gargalo é a detecção, não a
+> **Frase de fechamento**: "Detectamos em 7 minutos e recuperamos em 37 segundos,
+> sem ninguém intervir. E o ensaio mostrou que o gargalo é a detecção, não a
 > correção."
 
 ## Bloco 8 — FinOps (1,5 min)
 
-**Na tela**:
+> **Falar**: "Controlar custo aqui não é enfeite. O cliente é uma ONG. Cada dólar
+> que vai pra infraestrutura é um dólar que não vira projeto social."
 
-**Abrir dizendo**: "FinOps aqui não é enfeite. O cliente é uma ONG: cada dólar
-que vai para infraestrutura é um dólar que não vira projeto social. Então
-custo é requisito, não consequência."
+**Na tela**: `infra/terraform/envs/primary/providers.tf`
 
-1. `infra/terraform/envs/primary/providers.tf` — o bloco `default_tags` com
-   `Project`, `Environment` e `CostCenter`.
+> **Falar**: "Governança de custo começa sabendo de quem é a conta. Essas três
+> etiquetas ficam na configuração do provedor. Isso significa que **todo** recurso
+> que o Terraform criar já nasce etiquetado, sem ninguém precisar lembrar. E não
+> existe caminho pra criar recurso sem etiqueta, porque não existe caminho pra
+> criar recurso fora do Terraform."
 
-   > **Falar**: "governança de custo começa por saber de quem é a conta. Estas
-   > três tags — `Project`, `Environment` e `CostCenter` — estão em
-   > `default_tags` do provider AWS, o que significa que **todo** recurso que
-   > o Terraform criar nasce etiquetado, sem ninguém precisar lembrar. Não
-   > existe caminho para criar recurso sem tag, porque não existe caminho para
-   > criar recurso fora do Terraform."
+**AWS Tag Editor** → filtrar `Project = SolidaryTech`
 
-2. Terminal:
+> **Falar**: "E aqui a prova. Cluster, banco, fila, tabela, rede — tudo com a
+> mesma etiqueta, tudo rastreável por centro de custo.
+>
+> Sendo honesto: alguns tipos de recurso a AWS simplesmente não deixa etiquetar.
+> Não é falha de cobertura, é limitação da plataforma, e está documentado."
 
-```bash
-aws resourcegroupstaggingapi get-resources --region us-east-1 \
-  --tag-filters Key=Project,Values=SolidaryTech \
-  --query 'length(ResourceTagMappingList)'
-```
+**Abrir** [`finops-forecast.md`](finops-forecast.md)
 
-   > **Falar**: "e a prova: essa é a quantidade de recursos que a AWS
-   > reconhece hoje como pertencentes a este projeto, consultada por tag."
-
-3. **AWS Tag Editor** (rende melhor em vídeo que o terminal):
-   <https://us-east-1.console.aws.amazon.com/resource-groups/tag-editor/find-resources>
-   → região `us-east-1`, todos os tipos, tag `Project = SolidaryTech`.
-
-   > **Falar**: "o mesmo dado no console, que é mais fácil de ler: cluster,
-   > banco, fila, tabela, repositórios, rede — tudo com a mesma etiqueta, e
-   > portanto tudo rastreável no Cost Explorer por centro de custo.
-   > Honestidade: **alguns tipos de recurso a AWS simplesmente não permite
-   > etiquetar** — associação de route table, config de replicação do ECR,
-   > provider OIDC. Não é falha de cobertura, é limitação da plataforma, e
-   > está documentado."
-
-4. [`finops-forecast.md`](finops-forecast.md) — a tabela de custo e as
-   economias.
-
-   > **Falar**: "o forecast é linha a linha, com preço unitário: **cerca de
-   > US$ 150 por mês** se isso ficasse de pé 24 por 7. O maior item nem é
-   > computação — são os **US$ 73 do control plane do EKS**, que é preço fixo
-   > da AWS, seguido de US$ 35 do NAT Gateway.
-   >
-   > E aqui as decisões de engenharia que derrubaram esse número: nós em
-   > **Spot** em vez de on-demand, −70% na conta de EC2; **um** NAT Gateway em
-   > vez de um por zona, −US$ 33; **uma** instância RDS com dois bancos em vez
-   > de duas instâncias, metade do custo; **nenhum load balancer** — as demos
-   > usam port-forward, o que economiza US$ 20 por mês *e* evita um LB órfão
-   > travando o destroy; e a maior de todas: o ambiente de **DR criado sob
-   > demanda**, que elimina 100% do custo ocioso de um standby permanente —
-   > US$ 145 por mês que simplesmente não existem.
-   >
-   > Um item que quase todo forecast esquece e este inclui: **CloudWatch Logs
-   > do control plane do EKS**, uns US$ 2,50 por mês que aparecem na fatura
-   > sem ninguém ter pedido."
-
-5. Rightsizing, com a carga ainda rodando:
+> **Falar**: "A previsão é linha a linha. Dá **150 dólares por mês** se ficasse
+> ligado o tempo todo.
+>
+> E o maior item nem é computação: são 73 dólares só do painel de controle do
+> Kubernetes, que é preço fixo da AWS.
+>
+> Agora as decisões que derrubaram esse número. Máquinas Spot, 70% mais baratas.
+> Um gateway de saída em vez de um por zona. Uma instância de banco com dois
+> bancos dentro, em vez de duas instâncias. Nenhum balanceador de carga — as demos
+> usam túnel, o que economiza 20 dólares por mês.
+>
+> E a maior de todas: o ambiente de contingência **só existe quando precisa**.
+> Isso elimina 145 dólares por mês de coisa parada esperando um desastre."
 
 ```bash
 kubectl -n solidarytech top pods
 ```
-   Comparar com os `requests`/`limits` em `gitops/workloads/base/`.
 
-   > **Falar**: "e rightsizing com dado, não com chute: este é o consumo real
-   > dos pods **sob carga**, para comparar com os `requests` e `limits`
-   > declarados. Requests altos demais desperdiçam nó reservando o que não se
-   > usa; baixos demais fazem o Kubernetes matar o pod na hora errada.
-   >
-   > A propósito de dimensionamento, o achado mais contraintuitivo deste
-   > projeto: o limite de escala do cluster **não** era CPU nem memória — era
-   > **pods por nó**. O CNI da AWS aloca IPs por interface de rede, e um
-   > `t3.medium` só comporta 17 pods. Bati o teto com CPU em 50% e memória em
-   > 45%: qualquer painel de recursos mostraria o cluster folgado, e os pods
-   > ficavam `Pending`."
+> **Falar**: "E dimensionamento com dado, não com chute. Esse é o consumo real
+> sob carga, pra comparar com o que eu reservei.
+>
+> Aliás, o achado mais estranho do projeto: o limite do meu cluster não era
+> processador nem memória. Era **quantidade de pods por máquina**. A rede da AWS
+> distribui endereços por placa, e esse tipo de máquina só comporta 17 pods. Eu
+> bati o teto com o processador em 50%. Qualquer painel de recurso mostraria o
+> cluster folgado."
 
-> Se o Cost Explorer ainda não agrupar por tag, **diga isso em voz alta**: a
-> ativação como *cost allocation tag* leva até 24h. O Tag Editor prova a
-> cobertura de imediato.
+> **Frase de fechamento**: "Cada linha dessa conta tem uma decisão de engenharia
+> atrás."
 
-> **Frase-chave**: "cada linha dessa conta tem uma decisão de engenharia atrás."
+## Bloco 9 — Gestão de incidentes e AIOps (1,5 min)
 
-## Bloco 9 — ITSM e AIOps (1,5 min)
+**Na tela**: [`itsm-incident-flow.md`](itsm-incident-flow.md)
 
-**Na tela**:
+**Percurso**: caixas 1 → 5, e **por último** a seta pontilhada.
 
-1. [`itsm-incident-flow.md`](itsm-incident-flow.md) — o diagrama dos 5
-   estágios. Percurso do cursor: caixas 1 → 2 → 3 → 4 → 5, e **por último** a
-   seta pontilhada para "Sem incidente formal".
+> **Falar**: "O incidente que vocês viram não é um evento solto. Ele percorre um
+> processo, e cada caixa aqui aponta pra um arquivo que existe no repositório.
+>
+> Detecção em três camadas. O Prometheus pega violação de contrato. O New Relic
+> pega desvio do normal. E o Kubernetes pega pod morto, em segundos.
+>
+> Alerta: o Alertmanager agrupa e remove duplicado. Tratamento: tem um runbook com
+> árvore de decisão. Depois post-mortem em 48 horas, e comunicação, com modelos de
+> e-mail prontos pra diretoria e pras ONGs.
+>
+> Mas a seta mais importante é essa pontilhada aqui: **a maior parte das falhas
+> nunca vira incidente**. Sonda, autocorreção e escalonamento resolvem sozinhos.
+>
+> A forma mais eficaz de reduzir tempo de recuperação não é responder mais rápido.
+> É fazer com que não tenha o que responder."
 
-   > **Falar**: "o incidente que vocês acabaram de ver não é um evento solto:
-   > ele percorre um processo, e cada caixa aqui aponta para um artefato que
-   > existe no repositório. **Detecção** em três camadas redundantes:
-   > Prometheus pega violação de contrato, New Relic pega desvio do normal, e
-   > os probes do Kubernetes pegam pod morto em segundos. **Alerta**:
-   > Alertmanager agrupa e deduplica. **Tratamento**: runbook com árvore de
-   > decisão. **Post-mortem** blameless em 48 horas. E **comunicação**, com
-   > modelos prontos de e-mail para diretoria e para as ONGs.
-   >
-   > Mas a seta mais importante do diagrama é esta pontilhada:
-   > **a maior parte das falhas nunca vira incidente formal**. Probe,
-   > self-heal e HPA resolvem sozinhos. A forma mais eficaz de baixar MTTR não
-   > é responder mais rápido — é fazer com que não haja o que responder."
+**Na tela**: `infra/terraform/newrelic/main.tf` e depois as condições no New Relic
 
-2. `infra/terraform/newrelic/main.tf` — as condições `type = "baseline"`:
-   **anomaly detection como código**, limiar aprendido em vez de fixo.
+> **Falar**: "E aqui a parte de inteligência artificial que o edital pede. Essas
+> duas condições são do tipo **baseline**.
+>
+> Em vez de eu dizer 'alerta acima de 300 milissegundos', o New Relic **aprende**
+> como o serviço se comporta normalmente e avisa quando ele foge do padrão.
+>
+> A diferença é essa: alerta comum só existe depois que já teve erro. O baseline
+> dispara quando o comportamento **muda**, mesmo sem erro nenhum. Por exemplo, se
+> as doações simplesmente pararem de chegar num horário em que sempre chegam.
+> Nenhum alerta de erro pegaria isso, porque não tem erro.
+>
+> E olha que isso é Terraform, não configuração clicada. Alerta configurado na mão
+> é alerta que se perde no próximo ambiente."
 
-   > **Falar**: "AIOps aqui tem significado concreto. Estas duas condições são
-   > `type = "baseline"`: em vez de eu dizer 'alerte acima de 300
-   > milissegundos', o New Relic **aprende** o comportamento normal do serviço
-   > e dispara quando ele se desvia. É a diferença entre detecção reativa e
-   > preditiva: um alerta de burn rate só existe depois que já houve erro; um
-   > baseline dispara quando o comportamento *muda*, mesmo sem erro nenhum —
-   > por exemplo, se as doações simplesmente pararem de chegar num horário em
-   > que sempre chegam. Nenhum alerta de erro pegaria isso, porque não há
-   > erro.
-   >
-   > E repare que isso é **Terraform**, não configuração clicada: o edital
-   > proíbe criar coisa pelo console, e alerta configurado na mão é alerta que
-   > se perde no próximo ambiente."
+> **Frase de fechamento**: "Detecção preditiva é o limiar aprendido, não o limiar
+> fixo. Ele dispara quando o comportamento muda, antes de a meta ser violada."
 
-3. **New Relic** <https://one.newrelic.com/alerts> → as 2 policies
-   (`SolidaryTech - donation-service (Hot Path)` e
-   `SolidaryTech - plataforma (Kubernetes)`) com as 5 condições.
+## Bloco 10 — Continuidade e recuperação de desastre (2 min)
 
-   > **Falar**: "as mesmas policies aplicadas na conta real: uma para o Hot
-   > Path, outra para a plataforma Kubernetes, com cinco condições no total —
-   > três de limiar fixo e duas de baseline. E uma limitação declarada: o
-   > roteamento automático para e-mail, o *Workflow*, é bloqueado no plano
-   > gratuito — a API responde `MISSING_ENTITLEMENT`. O código está escrito e
-   > revisado; o que falta é entitlement de plano, não implementação."
+> **Falar**: "O pedido da diretoria era: mesmo que a nuvem falhe, as doações não
+> podem parar. Falha de região inteira é o pior caso, e é o que esse plano cobre.
+>
+> Rodar isso ao vivo levaria 25 minutos, então eu vou apresentar o ensaio que eu
+> executei de verdade, com dados reais."
 
-4. **Alertmanager** <http://localhost:9093> → o agrupamento por `service` e a
-   rota do `Watchdog` para o receiver nulo.
+**Na tela**: [`dr-plan.md`](dr-plan.md)
 
-   > **Falar**: "do lado do Prometheus, o Alertmanager cuida do que separa um
-   > sistema de alertas útil de um que ninguém lê. Agrupamento por serviço: um
-   > deploy ruim que derruba as duas réplicas do `donation-service` é **um**
-   > incidente, não dois. Regra de inibição: um alerta crítico silencia o
-   > aviso do mesmo serviço, porque os dois vêm do mesmo sintoma. E o
-   > `Watchdog`, que dispara sempre — é o alerta que prova que o pipeline de
-   > alertas está vivo — vai para um receiver nulo, para nunca notificar
-   > ninguém. Essa configuração foi validada com o `amtool` oficial."
+> **Falar**: "Eu escolhi a opção B do edital: contingência morna, com os mesmos
+> módulos Terraform na outra região.
+>
+> Mas repara: esse ambiente **não existe** no dia a dia. Ele é criado na hora. É a
+> decisão de custo do bloco anterior — deixar tudo parado esperando um desastre
+> custaria 145 dólares por mês.
+>
+> Os dois números que definem qualquer plano de continuidade: quanto de dado eu
+> aceito perder, e quanto tempo eu aceito ficar fora. Aqui: até uma hora de dado,
+> e até uma hora fora.
+>
+> E essa tabela é a parte que costuma faltar nos planos: **cada tipo de dado tem
+> uma estratégia diferente**.
+>
+> O banco vai por cópia tirada no momento da ativação, e não uma cópia velha de
+> ontem. O DynamoDB já é replicado continuamente, então perda praticamente zero.
+> As imagens já estão do outro lado antes de qualquer desastre. E a fila é
+> recriada vazia — essa perda eu aceito e declaro: perde-se notificação em
+> trânsito, não doação, porque a doação é gravada antes da mensagem sair."
 
-5. [`postmortem-mttr-demo.md`](postmortem-mttr-demo.md) — a seção **"O que o
-   ensaio refutou"** e a tabela de ações corretivas.
+**Na tela**: `scripts/activate-dr.sh`
 
-   > **Falar**: "e o ciclo fecha aqui: o post-mortem do incidente que vocês
-   > viram acontecer. Blameless, com os cinco porquês, os tempos medidos, e —
-   > o que mais importa — uma tabela de ações corretivas **com dono**. Um
-   > post-mortem sem commit associado não fechou nada; por isso a última seta
-   > do diagrama volta para a detecção. Ação corretiva vira código."
+> **Falar**: "E o plano é executável, não é documento de gaveta. É **um comando**.
+> Ele tira a cópia do banco, manda pra outra região, cria a infraestrutura e sobe
+> as aplicações.
+>
+> Quem estiver de plantão às 3 da manhã não precisa lembrar de quatro
+> procedimentos. Precisa rodar um script."
 
-> **Frase-chave**: "detecção preditiva é o limiar aprendido, não o limiar fixo:
-> a condição baseline dispara quando o comportamento muda, antes de o SLO ser
-> violado."
+**Na tela**: seção "Resultado do ensaio" do `dr-plan.md`
 
-## Bloco 10 — Disaster Recovery (2 min)
+> **Falar**: "E aqui o que separa plano escrito de plano testado.
+>
+> Eu subi o ambiente, criei uma ONG e duas doações de verdade, simulei a perda da
+> região, rodei o script e cronometrei.
+>
+> **24 minutos e 23 segundos**, contra uma meta de uma hora. A parte lenta é criar
+> o cluster, uns 15 a 20 minutos. Não tem como acelerar isso sem pagar por
+> ambiente parado.
+>
+> E a prova que interessa: eu consultei as doações na região de contingência, e as
+> duas voltaram inteiras. Mesmo id, mesmo valor, mesma data. Nenhum dado
+> transacional perdido.
+>
+> Uma limitação que eu declaro em vez de esconder: o script lê informação que fica
+> guardada na região principal. Numa falha total dela, isso seria um ponto cego.
+> Por isso existe uma variável que pula essa leitura."
 
-Executar o DR ao vivo custa ~25 min de RTO — **apresente o ensaio registrado**,
-que é evidência igualmente válida e cabe no tempo.
+> **Frase de fechamento**: "As duas doações criadas na região principal aparecem
+> na de contingência com o mesmo id e a mesma data. Nada foi perdido."
 
-**Na tela**:
-
-**Abrir dizendo**: "o objetivo da diretoria era 'mesmo que a nuvem falhe, as
-doações não podem parar'. Falha de região é o pior caso, e é o que este plano
-cobre. Executar ao vivo levaria 25 minutos, então apresento o **ensaio
-registrado** — que foi executado de verdade contra a conta AWS, com dados
-reais."
-
-1. [`dr-plan.md`](dr-plan.md) — Warm Standby (Opção B), **RPO ≤ 1h**,
-   **RTO alvo 1h**, e a tabela por tipo de dado.
-
-   > **Falar**: "escolhi a **opção B do edital**, warm standby por Terraform
-   > modularizado: `us-east-2` usa exatamente os mesmos módulos de
-   > `us-east-1`, mas o ambiente **não existe** no dia a dia — ele é criado
-   > sob demanda. É a decisão de FinOps do bloco anterior: standby permanente
-   > custaria US$ 145 por mês parado, esperando um desastre que talvez nunca
-   > venha.
-   >
-   > E os dois números que definem qualquer plano de continuidade: **RPO**, o
-   > quanto se aceita perder de dado — aqui **até 1 hora**; e **RTO**, o
-   > quanto se aceita ficar fora — alvo de **1 hora**.
-   >
-   > Esta tabela é a parte que costuma faltar nos planos: **cada tipo de dado
-   > tem uma estratégia diferente**. O Postgres vai por snapshot copiado entre
-   > regiões no momento da ativação — não uma cópia periódica velha, o que é
-   > justamente o que sustenta o RPO de 1 hora. O DynamoDB é Global Table,
-   > replicação contínua da AWS, RPO praticamente zero. As imagens já estão
-   > replicadas no ECR antes de qualquer desastre. E a fila SQS é recriada
-   > vazia — perda **aceita e declarada**: perde-se notificação em trânsito,
-   > não doação, porque a doação é gravada no banco antes de a mensagem ser
-   > publicada."
-
-2. `scripts/activate-dr.sh` — mostrar que é **um comando** e apontar as 4
-   etapas descritas no cabeçalho.
-
-   > **Falar**: "e o plano é executável, não um documento de gaveta: **um
-   > comando**. Ele tira um snapshot fresco do banco, copia para a outra
-   > região, roda `terraform apply` no ambiente de DR e sobe o ArgoCD com o
-   > overlay `dr`. Quem estiver de plantão às 3 da manhã não precisa lembrar
-   > de quatro procedimentos — precisa rodar um script."
-
-3. A seção **"Resultado do ensaio"** do `dr-plan.md`: **RTO medido 24min23s** e
-   a prova de RPO — as doações do `us-east-1` retornando íntegras no
-   `us-east-2`.
-
-   > **Falar**: "e aqui o que separa 'plano escrito' de 'plano testado'.
-   > Executei o ensaio completo: subi o primário, criei uma ONG e duas doações
-   > reais, simulei a perda da região, rodei o script e cronometrei.
-   >
-   > **RTO medido: 24 minutos e 23 segundos**, contra um alvo de 1 hora. A
-   > etapa mais lenta é a criação do cluster EKS, uns 15 a 20 minutos — não há
-   > o que otimizar aí sem pagar por standby permanente.
-   >
-   > E a prova de RPO, que é o que realmente importa para uma ONG: um
-   > `GET /donations` na região de contingência devolveu **as duas doações
-   > criadas na região primária**, com o mesmo `id`, o mesmo valor e o mesmo
-   > `created_at`. Nenhum dado transacional perdido.
-   >
-   > Uma limitação que declaro em vez de esconder: o script lê o `terraform
-   > output` do primário, cujo state fica em `us-east-1`. Numa falha *total*
-   > da região, isso seria um ponto cego — por isso existe um override por
-   > variável de ambiente que pula essa leitura. Replicar o bucket de state
-   > resolveria de vez, e foi descartado por custo e complexidade para o
-   > escopo deste hackathon."
-
-> **Frase-chave**: "as duas doações criadas no `us-east-1` aparecem no
-> `us-east-2` com o mesmo `id` e `created_at` — nenhum dado transacional
-> perdido."
-
-## Bloco 11 — Encerramento (30 s)
+## Bloco 11 — Encerramento (40 s)
 
 **Na tela**: `terraform destroy` iniciando.
 
-> **Falar**: "encerro derrubando tudo — e isso é parte da demonstração, não o
-> fim dela. Tudo que vocês viram custa cerca de **20 centavos de dólar por
-> hora** enquanto está de pé, e some inteiro com um comando. É essa
-> propriedade que torna o DR sob demanda viável e a conta pagável por uma ONG:
-> infraestrutura que é **código**, não patrimônio.
+> **Falar**: "Eu encerro derrubando tudo. E isso faz parte da demonstração.
 >
-> Recapitulando o que foi demonstrado funcionando: três microsserviços
-> conteinerizados rodando em EKS; toda a infraestrutura em Terraform, nada
-> pelo console; esteira DevSecOps com SAST, SCA, análise de qualidade e
-> bloqueio real por vulnerabilidade de imagem; entrega contínua por GitOps com
-> self-heal; observabilidade com métricas, logs e tracing distribuído; SLO,
-> error budget e um incidente cronometrado do início ao post-mortem; FinOps
-> com tags, forecast e rightsizing; e um plano de continuidade **ensaiado**,
-> com RTO e RPO medidos.
+> Tudo que vocês viram custa mais ou menos **20 centavos de dólar por hora**
+> enquanto está de pé. E some inteiro com um comando. É isso que torna a
+> contingência sob demanda possível, e a conta pagável por uma ONG.
 >
-> Duas pendências que declaro em vez de omitir: o **Workflow do New Relic** —
-> o roteamento automático de alerta para e-mail — é bloqueado pelo plano
-> gratuito, com a API respondendo `MISSING_ENTITLEMENT`; o código está pronto,
-> falta entitlement. E as **ações corretivas 5, 6 e 7** do post-mortem seguem
-> abertas, incluindo a lacuna de detecção que o próprio ensaio revelou. Achei
-> mais honesto entregar o problema documentado do que fingir que não existe.
+> Recapitulando: três serviços em contêiner rodando no Kubernetes; infraestrutura
+> inteira em Terraform, nada pelo console; esteira com análise de segurança e
+> bloqueio real por vulnerabilidade; entrega contínua por GitOps com autocorreção;
+> monitoramento com métrica, log e rastro; metas de disponibilidade, orçamento de
+> erro e um incidente cronometrado até o post-mortem; controle de custo com
+> etiquetas, previsão e dimensionamento; e um plano de continuidade **ensaiado**,
+> com os tempos medidos.
 >
-> Todo o código, os documentos e as evidências brutas estão no repositório.
-> Obrigado."
-
-> **Frase-chave**: "a infraestrutura inteira sobe e desce por comando — é isso
-> que torna o DR sob demanda viável e a conta pagável por uma ONG."
+> Duas pendências, que eu prefiro declarar. O envio automático de alerta por
+> e-mail no New Relic é bloqueado no plano gratuito — o código está pronto, falta
+> o plano. E três ações corretivas do post-mortem seguem abertas, incluindo aquela
+> falha de detecção que o próprio ensaio revelou.
+>
+> Achei mais honesto entregar o problema documentado do que fingir que ele não
+> existe.
+>
+> Todo o código, os documentos e as evidências estão no repositório. Obrigado."
 
 ---
 
 ## Dicas de gravação
 
-- **Terminal grande** (fonte ≥ 16pt): comando ilegível não é evidência.
-- `clear` antes de cada bloco de terminal — rolagem antiga confunde.
-- Ao abrir um arquivo, aponte **as 2 ou 3 linhas que importam**.
-- Quando algo demorar (sync, alerta), **continue narrando o porquê** em vez de
-  ficar em silêncio.
-- Se algo falhar ao vivo, **não corte**: diagnosticar em tempo real é
-  exatamente a competência avaliada em SRE.
-- Os port-forwards caem quando o pod é recriado — no bloco 7 o `ngo-service`
-  **é** recriado, então o túnel da 8081 vai cair. É esperado; reabra se
-  precisar dele depois.
+- **Terminal grande** (fonte ≥ 16pt). Comando ilegível não é evidência.
+- `clear` antes de cada bloco de terminal.
+- Ao abrir um arquivo, aponte **as 2 ou 3 linhas que importam**. Não leia o
+  arquivo inteiro.
+- Quando algo demorar (sync, alerta), **continue falando** em vez de ficar em
+  silêncio. Explique o que está acontecendo enquanto acontece.
+- Se algo falhar ao vivo, **não corte**. Diagnosticar em tempo real é exatamente
+  a competência que está sendo avaliada.
+- **Fale mais devagar do que parece natural.** Na gravação sempre soa mais rápido
+  do que na hora.
+- Os port-forwards caem quando o pod é recriado. No bloco 7 o `ngo-service` **é**
+  recriado, então o túnel da 8081 vai cair. É esperado.
+
+## Se o tempo apertar
+
+Os blocos 6 e 7 são os mais densos. Cada `> Falar` tem o essencial no primeiro
+parágrafo e aprofundamento nos seguintes — corte os de baixo e mantenha o
+primeiro. Os cortes mais baratos, em ordem:
+
+1. Bloco 3.3 (OIDC) — 15 segundos, dá pra só apontar no YAML.
+2. Bloco 8, o achado de pods por máquina.
+3. Bloco 6.5 (logs) — o Loki já apareceu no diagrama.
 
 ## Mapa vídeo → requisitos do edital
 

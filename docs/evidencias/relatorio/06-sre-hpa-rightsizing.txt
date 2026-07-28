@@ -1,0 +1,27 @@
+EVIDENCIA SRE - Autoscaling e Metrics API
+Coletado em: 2026-07-27 23:51:05 -03
+
+$ kubectl -n solidarytech get hpa
+NAME               REFERENCE                     TARGETS        MINPODS   MAXPODS   REPLICAS   AGE
+donation-service   Deployment/donation-service   cpu: 73%/70%   2         4         4          7h3m
+
+$ kubectl -n solidarytech top pods   (rightsizing - consumo real sob carga)
+NAME                                 CPU(cores)   MEMORY(bytes)   
+donation-service-6886b88cc6-79l82    132m         48Mi            
+donation-service-6886b88cc6-gbkjm    1m           11Mi            
+donation-service-6886b88cc6-nxxqj    1m           12Mi            
+donation-service-6886b88cc6-qjln6    1m           11Mi            
+ngo-service-7bfd989dcf-ft5h7         108m         99Mi            
+volunteer-service-65b88d46c5-bjcg2   2m           121Mi           
+
+$ kubectl -n argocd get applications
+NAME                    SYNC STATUS   HEALTH STATUS
+donation-service        Synced        Healthy
+kube-prometheus-stack   Synced        Healthy
+loki                    Synced        Healthy
+ngo-service             Synced        Healthy
+nri-bundle              Synced        Healthy
+platform                Synced        Healthy
+promtail                Synced        Healthy
+solidarytech-root       Synced        Healthy
+volunteer-service       Synced        Healthy

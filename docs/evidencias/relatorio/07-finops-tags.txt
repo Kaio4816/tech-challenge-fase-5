@@ -1,0 +1,44 @@
+EVIDENCIA FinOps - Tags obrigatorias (Project / Environment / CostCenter)
+Coletado em: 2026-07-27 23:50:48 -03
+Conta AWS: 712819938659   Regiao: us-east-1
+
+TOTAL de recursos etiquetados com Project=SolidaryTech: 60
+
+As 3 tags obrigatorias sao aplicadas via default_tags do provider AWS
+(infra/terraform/envs/primary/providers.tf), portanto todo recurso criado
+pelo Terraform nasce etiquetado. Exemplo, no cluster EKS:
+
+---------------------------------
+|         GetResources          |
++--------------+----------------+
+|      Key     |     Value      |
++--------------+----------------+
+|  Project     |  SolidaryTech  |
+|  CostCenter  |  NGO-Core      |
+|  Environment |  Production    |
++--------------+----------------+
+
+Distribuicao por servico AWS:
+  ec2            32 recurso(s)
+  eks            8 recurso(s)
+  kms            5 recurso(s)
+  iam            5 recurso(s)
+  ecr            3 recurso(s)
+  sqs            2 recurso(s)
+  rds            2 recurso(s)
+  s3             1 recurso(s)
+  logs           1 recurso(s)
+  dynamodb       1 recurso(s)
+
+Ressalva documentada em docs/finops-forecast.md: alguns tipos de recurso
+nao sao tagaveis pela AWS (associacao de route table, replication config
+do ECR, OIDC provider) - limitacao da plataforma, nao de cobertura.
+
+NOTA sobre a divergencia entre as duas fontes (ambas corretas):
+  - Resource Groups Tagging API (CLI, acima): 60 recursos
+  - Tag Editor do console (print 07b): 46 recursos
+A diferenca nao e de cobertura de tags: o Tag Editor consulta apenas os tipos
+que ele suporta ("All supported resource types" e a lista dele, nao a da conta),
+enquanto a Tagging API devolve tudo que esta etiquetado. Os 14 a mais sao
+majoritariamente sub-recursos de EC2/rede. Nenhum recurso etiquetado fica de
+fora do total real.
