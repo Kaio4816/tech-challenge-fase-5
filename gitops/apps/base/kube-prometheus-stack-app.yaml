@@ -138,6 +138,20 @@ spec:
               # RBAC cluster-wide (searchNamespace: ALL) para o sidecar.
               label: grafana_dashboard
               labelValue: "1"
+          # O chart só provisiona o datasource do Prometheus. O Loki é um
+          # Application separado (loki-app.yaml), então o Grafana não o
+          # descobre sozinho: sem esta declaração, "Explore -> Loki" não
+          # existe e a demo de logs é impossível. Service "loki" (não
+          # "loki-gateway" — o gateway está desligado), mesmo alvo que o
+          # Promtail usa para escrever.
+          additionalDataSources:
+            - name: Loki
+              type: loki
+              access: proxy
+              url: http://loki.monitoring.svc.cluster.local:3100
+              isDefault: false
+              jsonData:
+                maxLines: 1000
         kube-state-metrics:
           resources:
             requests:
