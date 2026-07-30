@@ -183,6 +183,21 @@ for probe in "http://localhost:8081/health ngo-service" "http://localhost:8082/h
 done
 echo "==> Túneis OK (ngo-service, donation-service, prometheus)"
 
+# Gerador de carga preexistente arruína a medição: a concorrência soma, o
+# db.t4g.micro satura e a linha de base do p95 estoura os 300ms do SLO. A partir
+# daí o alerta de latência mede a carga, não o incidente injetado -- aconteceu na
+# rodada de 2026-07-30 (base 352ms, p95 na falha 351ms: variação nenhuma).
+# Abortar é melhor que medir errado, porque o resultado errado *parece* válido.
+if pgrep -f "hey -z" >/dev/null 2>&1; then
+  echo "Erro: já existe gerador de carga rodando (hey -z):" >&2
+  pgrep -lf "hey -z" | sed 's/^/      /' >&2
+  echo >&2
+  echo "      Este script sobe a sua própria carga. Duas juntas saturam o RDS e" >&2
+  echo "      invalidam a linha de base do p95." >&2
+  echo "      Rode:  pkill -f 'hey -z'   espere ~2min o p95 cair, e tente de novo." >&2
+  exit 1
+fi
+
 log "INICIO_CARGA	load-test.sh ${DURATION} c=${CONCURRENCY}"
 NGO_SERVICE_URL="http://localhost:8081" BASE_URL="http://localhost:8082" \
   ./scripts/load-test.sh "${DURATION}" "${CONCURRENCY}" >"${OUT_DIR}/hey-output.txt" 2>&1 &
@@ -194,10 +209,24 @@ BASE_P95="$(p95_ms)"
 log "BASELINE_P95_MS	${BASE_P95}"
 
 if [[ "${BASE_P95}" != "n/a" && "${BASE_P95}" -gt 300 ]]; then
-  echo "AVISO: linha de base (${BASE_P95}ms) já viola o SLO de 300ms antes da falha." >&2
-  echo "       A carga está saturando o serviço/RDS -- reduza a concorrência," >&2
-  echo "       senão o alerta de latência mede a carga, não o incidente." >&2
+  echo >&2
+  echo "ERRO: linha de base (${BASE_P95}ms) já viola o SLO de 300ms ANTES da falha." >&2
+  echo "      Com a base acima do limiar, o alerta de latência mede a carga e não" >&2
+  echo "      o incidente -- o p95 não vai variar quando a dependência cair." >&2
+  echo >&2
+  echo "      Rode de novo com concorrência menor (metade da atual):" >&2
+  echo "        NGO_ID=${NGO_ID:-3} BASELINE_SECS=${BASELINE_SECS} \\" >&2
+  echo "          ./scripts/mttr-drill.sh ${MODE} ${DURATION} $(( CONCURRENCY / 2 ))" >&2
+  echo >&2
+  echo "      Para seguir mesmo assim (a medição de latência será inválida):" >&2
+  echo "        ALLOW_INVALID_BASELINE=1 ..." >&2
   log "BASELINE_INVALIDA	${BASE_P95}ms > 300ms"
+  if [[ -z "${ALLOW_INVALID_BASELINE:-}" ]]; then
+    kill "${LOAD_PID}" 2>/dev/null || true
+    pkill -f "hey -z" 2>/dev/null || true
+    exit 1
+  fi
+  echo "==> ALLOW_INVALID_BASELINE definido: seguindo com base inválida." >&2
 fi
 
 T0="$(now_epoch)"

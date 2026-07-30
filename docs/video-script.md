@@ -10,7 +10,8 @@ Objetivo: mostrar cada requisito do edital **funcionando**. A regra de avaliaç�
 > vez antes de gravar, entenda a ideia e fale com suas palavras. Se travar,
 > volte para a frase escrita.
 
-> Todos os números citados foram **medidos** contra a AWS real em 26–28/07/2026.
+> Os números citados são faixas **medidas** contra a AWS real em 25–30/07/2026.
+> Na gravação, leia os valores da sua própria tela.
 > As evidências estão em [`evidencias/relatorio/`](evidencias/relatorio/) e podem
 > ser abertas se a banca pedir.
 
@@ -346,10 +347,9 @@ aws dynamodb scan --table-name SolidaryTechVolunteers --region us-east-1 \
 >
 > NGO_ID=3 BASELINE_SECS=120 ./scripts/mttr-drill.sh detect 18m 8
 > ```
-> Se o drill imprimir `BASELINE_INVALIDA`, a carga ainda está alta: repita com
-> concorrência `4` no lugar do `8`. E se mesmo assim aparecer, siga em frente — o
-> bloco 7 tem a fala pronta para explicar isso, e explicar é mais forte que
-> esconder.
+> O drill **aborta sozinho** se detectar outra carga rodando ou se a linha de base
+> do p95 passar de 300 ms — e imprime o comando com a concorrência já reduzida pela
+> metade. Se isso acontecer, é só copiar o que ele sugere e rodar de novo.
 
 ### 6.1 — As metas
 
@@ -442,17 +442,30 @@ Volte ao terminal do ensaio disparado no bloco 6.
 > O incidente é realista: eu derrubo o `ngo-service`, que é a dependência do
 > caminho crítico. Aquela seta do começo do vídeo."
 
-**Narrar conforme aparece** (números da execução de 30/07):
+> ✅ **O drill valida a própria medição.** Se a linha de base do p95 já estiver
+> acima dos 300 ms do SLO, ele **aborta** com instrução de reduzir a concorrência,
+> em vez de seguir e produzir um número que parece válido e não é. Ou seja: se o
+> ensaio chegou até o fim, a medição é confiável. Isso vale citar em uma frase.
+
+**Narrar conforme os marcos aparecem.** Leia os números da sua tela — os valores
+entre parênteses são as faixas medidas em rodadas anteriores, para você saber o
+que esperar, não para decorar.
 
 | Momento | O que dizer |
 |---|---|
-| `BASELINE_P95_MS 352` + `BASELINE_INVALIDA` | "Presta atenção nesse aviso, porque ele é importante. O script mediu a linha de base antes de quebrar nada, e ela já está em 352 milissegundos, acima do meu limite de 300. Ou seja: a carga que eu gerei já está saturando o banco. Volto nisso." |
+| `BASELINE_P95_MS` (~20 ms) | "Antes de quebrar nada, o script mediu a linha de base: cerca de 20 milissegundos. Bem abaixo do meu limite de 300. É a partir daqui que a comparação vale." |
 | `T0_INICIO_IMPACTO` | "Aqui começa o incidente. Derrubei a dependência para zero réplicas." |
 | `FALHA_EFETIVA` (+5s) | "Confirmado: zero réplicas prontas. A dependência sumiu de verdade." |
-| — | "E olha o que importa: **nenhuma doação falhou**. Continua gravando normalmente, com a dependência fora." |
-| `ALERTA_FIRING` (+372s) | "**373 segundos** até o alerta disparar. Uns 6 minutos. Esse é o tempo de detecção." |
+| `DEGRADACAO_P95` (~1000 ms) | "E a latência salta de 20 milissegundos para cerca de 1 segundo. É o Hot Path esperando o timeout da dependência." |
+| — | "Mas olha o que importa: **nenhuma doação falhou**. Continua gravando normalmente, com a dependência fora." |
+| `ALERTA_FIRING` (~+6 a 7 min) | "Uns 400 segundos até o alerta disparar. Esse é o tempo de detecção." |
 | `LIBERACAO` | "Agora eu solto o incidente e paro de segurar. Daqui pra frente é o ArgoCD." |
-| `T3_RECUPERADO` (+569s) | "E recuperou. **3 minutos e 16 segundos** depois de eu soltar, sem eu digitar nada. O ArgoCD viu que o cluster estava diferente do Git e restaurou." |
+| `T3_RECUPERADO` | "E recuperou, sem eu digitar nada. O ArgoCD viu que o cluster estava diferente do Git e restaurou." |
+
+> ⚠️ **O tempo de recuperação varia entre rodadas** — já medi 37 segundos e já
+> medi 3 minutos e 16, dependendo de quanto o agendador demora a colocar o pod
+> num nó. Não prometa um número antes de ler a tela. O que é constante é que
+> **ninguém intervém**.
 
 ### Os pontos que valem nota
 
@@ -468,39 +481,38 @@ Volte ao terminal do ensaio disparado no bloco 6.
 > Consequência prática: quem for investigar isso procurando erro procura no lugar
 > errado. Está escrito no runbook por causa disso."
 
-> **Falar (2) — a recuperação automática**: "A recuperação não teve mão humana.
-> Eu soltei o incidente e o ArgoCD restaurou em 3 minutos e 16 segundos.
+> **Falar (2) — a recuperação automática**: "A recuperação não teve mão humana. Eu
+> soltei o incidente e o ArgoCD restaurou. *(diga o tempo que apareceu na tela)*
 >
 > Isso é o self-heal: o estado desejado está no Git, o cluster divergiu, e ele
 > desfez a divergência sozinho."
 
-> **Falar (3) — a medição inválida, e por que isso é bom**: "Agora eu preciso ser
-> honesto sobre o número da latência, e essa é a parte mais interessante.
+> **Falar (3) — detectar é mais lento que corrigir**: "E aqui o achado mais
+> interessante, que é meio desconfortável.
 >
-> Aquele aviso do começo disse que a linha de base já estava em 352 milissegundos.
-> Durante a falha, o p95 ficou em 351. Praticamente o mesmo número.
+> Detectar levou uns 400 segundos. Recuperar levou muito menos. A recuperação é
+> várias vezes mais rápida que a detecção.
 >
-> Ou seja: **o alerta de latência que disparou não mediu o meu incidente. Mediu a
-> minha própria carga saturando o banco.** A concorrência estava alta demais para
-> uma instância `db.t4g.micro`.
+> Ou seja: sem eu segurar o incidente de propósito, o sistema **se cura antes de
+> perceber que está doente**. É ótimo pro usuário e péssimo pra quem opera, porque
+> falha que não deixa rastro é falha que se repete.
 >
-> E o ponto é: o script detectou isso sozinho e me avisou antes de eu tirar
-> conclusão errada. Essa validação está ali porque numa rodada anterior eu quase
-> apresentei um número que não significava nada.
->
-> Medição que não sabe dizer quando está inválida é pior que não medir. Então o
-> que eu afirmo desta rodada é o que é atribuível: a dependência caiu, nenhuma
-> doação falhou, e a recuperação foi automática. O número da latência eu descarto."
+> Eu não descobri isso no papel, descobri rodando. E virou ação corretiva no
+> post-mortem, com dono."
 
-> **Falar (4) — o que rodadas anteriores mostraram**: "Numa rodada com a carga
-> calibrada, a linha de base ficou em 21 milissegundos, a detecção levou 424
-> segundos e a recuperação 37. Aí sim a comparação vale: recuperar é **onze vezes
-> mais rápido** que detectar.
+> **Falar (4) — a medição que se valida**: "Uma coisa que eu acrescentei depois de
+> um ensaio dar errado: antes de quebrar qualquer coisa, o script mede a linha de
+> base e **compara com o SLO**. Se a linha de base já estiver acima do limiar, ele
+> aborta.
 >
-> O que significa que, sem eu segurar o incidente de propósito, o sistema **se
-> cura antes de perceber que está doente**. Ótimo pro usuário, péssimo pra quem
-> opera, porque falha que não deixa rastro é falha que se repete. Isso virou ação
-> corretiva no post-mortem, com dono."
+> Porque numa rodada anterior a minha própria carga de teste estava saturando o
+> banco. A latência já estava em 352 milissegundos antes da falha, e durante a
+> falha ficou em 351. O alerta disparou, mas não estava medindo o incidente —
+> estava medindo o gerador de carga.
+>
+> O número parecia perfeitamente válido. Medição que não sabe dizer quando está
+> inválida é pior que não medir. Então agora o ensaio se recusa a rodar nessa
+> condição."
 
 > ⚠️ **Não prometa o que não vai acontecer**: `SolidaryTechTargetDown` **não**
 > dispara nesse cenário (com zero réplicas a série `up` desaparece, e ausência não
@@ -508,12 +520,10 @@ Volte ao terminal do ensaio disparado no bloco 6.
 > é bloqueado no plano gratuito. Citar como achado é mais forte do que omitir e ser
 > perguntado.
 
-> ⚠️ **Se quiser uma rodada com a latência válida**: a linha de base só fica em
-> ~20 ms com **um único gerador de carga** e concorrência baixa. O drill sobe o
-> seu próprio `load-test.sh`, então mate qualquer carga anterior antes
-> (`pkill -f "hey -z"`), espere o p95 voltar ao normal e rode com concorrência 4:
-> `NGO_ID=3 BASELINE_SECS=120 ./scripts/mttr-drill.sh detect 18m 4`. Ver também
-> a nota no início do bloco 6.
+> ⚠️ **Pré-requisito da rodada válida**: um único gerador de carga. O drill sobe o
+> seu próprio, então mate qualquer carga anterior antes (`pkill -f "hey -z"`) e
+> espere o p95 cair. O script verifica isso e recusa rodar se houver outra carga
+> ativa — ver a nota no início do bloco 6.
 > Se o aviso `BASELINE_INVALIDA` aparecer de novo, baixe mais a concorrência.
 
 > **Frase de fechamento**: "Detectamos em 6 minutos e recuperamos em 3, sem
