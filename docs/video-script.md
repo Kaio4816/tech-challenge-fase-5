@@ -425,20 +425,22 @@ Volte ao terminal do ensaio disparado no bloco 6.
 > O incidente é realista: eu derrubo o `ngo-service`, que é a dependência do
 > caminho crítico. Aquela seta do começo do vídeo."
 
-**Narrar conforme aparece**:
+**Narrar conforme aparece** (números da execução de 30/07):
 
 | Momento | O que dizer |
 |---|---|
-| `T0_INICIO_IMPACTO` | "Aqui começa. A dependência sumiu." |
-| `DEGRADACAO_P95` (~+54s) | "Menos de um minuto depois, a latência sai de 21 milissegundos e vai pra quase 1 segundo." |
-| — | "Mas olha: **nenhuma doação falhou**. Continua gravando." |
-| `ALERTA_FIRING` (~+7min) | "**424 segundos** até o alerta disparar. Sete minutos. Esse é o tempo de detecção." |
-| `T3_RECUPERADO` | "E a recuperação: eu não fiz nada. O ArgoCD viu a divergência e restaurou. **37 segundos**." |
-| `T4_FIM_IMPACTO` | "Alerta resolvido, latência de volta a 17 milissegundos." |
+| `BASELINE_P95_MS 352` + `BASELINE_INVALIDA` | "Presta atenção nesse aviso, porque ele é importante. O script mediu a linha de base antes de quebrar nada, e ela já está em 352 milissegundos, acima do meu limite de 300. Ou seja: a carga que eu gerei já está saturando o banco. Volto nisso." |
+| `T0_INICIO_IMPACTO` | "Aqui começa o incidente. Derrubei a dependência para zero réplicas." |
+| `FALHA_EFETIVA` (+5s) | "Confirmado: zero réplicas prontas. A dependência sumiu de verdade." |
+| — | "E olha o que importa: **nenhuma doação falhou**. Continua gravando normalmente, com a dependência fora." |
+| `ALERTA_FIRING` (+372s) | "**373 segundos** até o alerta disparar. Uns 6 minutos. Esse é o tempo de detecção." |
+| `LIBERACAO` | "Agora eu solto o incidente e paro de segurar. Daqui pra frente é o ArgoCD." |
+| `T3_RECUPERADO` (+569s) | "E recuperou. **3 minutos e 16 segundos** depois de eu soltar, sem eu digitar nada. O ArgoCD viu que o cluster estava diferente do Git e restaurou." |
 
-### Os três pontos que valem nota
+### Os pontos que valem nota
 
-> **Falar (1)**: "Repara no que **não** aconteceu. Nenhum alerta de erro.
+> **Falar (1) — o fail-open**: "Repara no que **não** aconteceu. Nenhum alerta de
+> erro. Nenhuma doação perdida.
 >
 > Porque a validação é o que se chama fail-open: se o outro serviço cai, a doação
 > é gravada mesmo assim. Só um 'ONG não existe' explícito rejeita.
@@ -446,36 +448,60 @@ Volte ao terminal do ensaio disparado no bloco 6.
 > Então a queda da dependência virou **lentidão, não erro**. E como o orçamento
 > de erro está ligado a falha, ele saiu **intacto** do incidente.
 >
-> Isso tem uma consequência prática: quem for investigar isso procurando erro vai
-> procurar no lugar errado. Está escrito no runbook por causa disso."
+> Consequência prática: quem for investigar isso procurando erro procura no lugar
+> errado. Está escrito no runbook por causa disso."
 
-> **Falar (2)**: "E aqui o achado mais interessante, que é meio desconfortável.
+> **Falar (2) — a recuperação automática**: "A recuperação não teve mão humana.
+> Eu soltei o incidente e o ArgoCD restaurou em 3 minutos e 16 segundos.
 >
-> Detectar levou 424 segundos. Recuperar levou 37. A recuperação é onze vezes
-> mais rápida que a detecção.
->
-> Ou seja: se eu não segurasse o incidente de propósito, o sistema **se curava
-> antes de perceber que estava doente**. É ótimo pro usuário e péssimo pra quem
-> opera, porque falha que não deixa rastro é falha que se repete."
+> Isso é o self-heal: o estado desejado está no Git, o cluster divergiu, e ele
+> desfez a divergência sozinho."
 
-> **Falar (3)**: "Eu não descobri isso no papel. Descobri rodando. E virou ação
-> corretiva no post-mortem, com dono.
+> **Falar (3) — a medição inválida, e por que isso é bom**: "Agora eu preciso ser
+> honesto sobre o número da latência, e essa é a parte mais interessante.
 >
-> Aliás, o ensaio derrubou duas coisas que eu tinha escrito antes. Eu achava que
-> um dos alertas ia cobrir 'zero réplicas', e não cobre — com zero réplica a série
-> some, e ausência não é o mesmo que zero. E eu achava que o ArgoCD ia levar uns
-> 3 minutos, e levou 37 segundos.
+> Aquele aviso do começo disse que a linha de base já estava em 352 milissegundos.
+> Durante a falha, o p95 ficou em 351. Praticamente o mesmo número.
 >
-> Ensaio que só confirma o que você já achava não mediu nada."
+> Ou seja: **o alerta de latência que disparou não mediu o meu incidente. Mediu a
+> minha própria carga saturando o banco.** A concorrência estava alta demais para
+> uma instância `db.t4g.micro`.
+>
+> E o ponto é: o script detectou isso sozinho e me avisou antes de eu tirar
+> conclusão errada. Essa validação está ali porque numa rodada anterior eu quase
+> apresentei um número que não significava nada.
+>
+> Medição que não sabe dizer quando está inválida é pior que não medir. Então o
+> que eu afirmo desta rodada é o que é atribuível: a dependência caiu, nenhuma
+> doação falhou, e a recuperação foi automática. O número da latência eu descarto."
+
+> **Falar (4) — o que rodadas anteriores mostraram**: "Numa rodada com a carga
+> calibrada, a linha de base ficou em 21 milissegundos, a detecção levou 424
+> segundos e a recuperação 37. Aí sim a comparação vale: recuperar é **onze vezes
+> mais rápido** que detectar.
+>
+> O que significa que, sem eu segurar o incidente de propósito, o sistema **se
+> cura antes de perceber que está doente**. Ótimo pro usuário, péssimo pra quem
+> opera, porque falha que não deixa rastro é falha que se repete. Isso virou ação
+> corretiva no post-mortem, com dono."
 
 > ⚠️ **Não prometa o que não vai acontecer**: `SolidaryTechTargetDown` **não**
-> dispara nesse cenário, e **não haverá e-mail do New Relic** — o roteamento
-> automático é bloqueado no plano gratuito. Citar como achado é mais forte do que
-> omitir e ser perguntado.
+> dispara nesse cenário (com zero réplicas a série `up` desaparece, e ausência não
+> satisfaz `== 0`), e **não haverá e-mail do New Relic** — o roteamento automático
+> é bloqueado no plano gratuito. Citar como achado é mais forte do que omitir e ser
+> perguntado.
 
-> **Frase de fechamento**: "Detectamos em 7 minutos e recuperamos em 37 segundos,
-> sem ninguém intervir. E o ensaio mostrou que o gargalo é a detecção, não a
-> correção."
+> ⚠️ **Se quiser uma rodada com a latência válida**: a linha de base só fica em
+> ~20 ms com **um único gerador de carga** e concorrência baixa. O drill sobe o
+> seu próprio `load-test.sh`, então mate qualquer carga anterior antes
+> (`pkill -f "hey -z"`), espere o p95 voltar ao normal e rode com concorrência 4:
+> `NGO_ID=3 BASELINE_SECS=120 ./scripts/mttr-drill.sh detect 18m 4`.
+> Se o aviso `BASELINE_INVALIDA` aparecer de novo, baixe mais a concorrência.
+
+> **Frase de fechamento**: "Detectamos em 6 minutos e recuperamos em 3, sem
+> ninguém intervir. E o ensaio mostrou o gargalo real: é a detecção, não a
+> correção. Mostrou também que a minha carga de teste estava saturando o banco —
+> e é melhor descobrir isso num ensaio do que numa apresentação."
 
 ## Bloco 8 — FinOps (1,5 min)
 
