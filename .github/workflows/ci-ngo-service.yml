@@ -260,3 +260,4 @@ jobs:
 # Gatilho de rebuild: ECR recriado do zero na janela de verificação da F5 (2026-07-25).
 
 # Gatilho de rebuild: ECR recriado para a gravacao do video (2026-07-27).
+# rebuild: ECR recriado em 2026-07-29
