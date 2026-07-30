@@ -73,7 +73,12 @@ kubectl -n monitoring get secret kube-prometheus-stack-grafana \
 - [ ] Dados de seed criados (1 ONG + doações + 1 voluntário).
 - [ ] `hey` e `jq` instalados (`brew install hey jq`).
 - [ ] **Teste de carga rodando** antes de abrir o Grafana, senão os gráficos
-      aparecem chapados: `NGO_ID=1 ./scripts/load-test.sh 20m 8`
+      aparecem chapados: `NGO_ID=3 ./scripts/load-test.sh 60m 8`
+- [ ] ⚠️ **Um gerador de carga por vez.** O `mttr-drill.sh` sobe o seu próprio
+      `load-test.sh`. Se o teste acima ainda estiver rodando quando você disparar
+      o drill, a concorrência dobra, o `db.t4g.micro` satura e a linha de base do
+      p95 passa dos 300 ms — aí o alerta de latência mede a sua carga, não o
+      incidente. Antes do drill: `pkill -f "hey -z"` e espere o p95 cair.
 - [ ] **Tags de alocação de custo ativadas em Billing** — leva até 24h. Se não
       deu tempo, use o Tag Editor, que é imediato.
 - [ ] `pkill -f port-forward` e reabra os túneis (túnel velho aponta para pod
@@ -329,10 +334,22 @@ aws dynamodb scan --table-name SolidaryTechVolunteers --region us-east-1 \
 ## Bloco 6 — Observabilidade e SRE (3 min)
 
 > ⏱ **Dispare o ensaio de MTTR num terminal separado ANTES deste bloco.** A
-> detecção leva uns 7 minutos e você volta nele no bloco 7:
+> detecção leva uns 6 a 7 minutos e você volta nele no bloco 7.
+>
+> **Mate a carga do checklist primeiro** — o drill sobe a sua própria, e duas
+> juntas saturam o banco (foi o que invalidou a linha de base na rodada de 30/07):
 > ```bash
-> NGO_ID=1 BASELINE_SECS=120 ./scripts/mttr-drill.sh detect 18m 8
+> pkill -f "hey -z"
+> # espere o p95 cair (uns 2 min) e confira:
+> curl -s -G --data-urlencode 'query=histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job="donation-service",path="/donations"}[2m])) by (le))' \
+>   http://localhost:9090/api/v1/query | python3 -c "import json,sys;r=json.load(sys.stdin)['data']['result'];print(round(float(r[0]['value'][1])*1000,1),'ms') if r else print('sem trafego')"
+>
+> NGO_ID=3 BASELINE_SECS=120 ./scripts/mttr-drill.sh detect 18m 8
 > ```
+> Se o drill imprimir `BASELINE_INVALIDA`, a carga ainda está alta: repita com
+> concorrência `4` no lugar do `8`. E se mesmo assim aparecer, siga em frente — o
+> bloco 7 tem a fala pronta para explicar isso, e explicar é mais forte que
+> esconder.
 
 ### 6.1 — As metas
 
@@ -495,7 +512,8 @@ Volte ao terminal do ensaio disparado no bloco 6.
 > ~20 ms com **um único gerador de carga** e concorrência baixa. O drill sobe o
 > seu próprio `load-test.sh`, então mate qualquer carga anterior antes
 > (`pkill -f "hey -z"`), espere o p95 voltar ao normal e rode com concorrência 4:
-> `NGO_ID=3 BASELINE_SECS=120 ./scripts/mttr-drill.sh detect 18m 4`.
+> `NGO_ID=3 BASELINE_SECS=120 ./scripts/mttr-drill.sh detect 18m 4`. Ver também
+> a nota no início do bloco 6.
 > Se o aviso `BASELINE_INVALIDA` aparecer de novo, baixe mais a concorrência.
 
 > **Frase de fechamento**: "Detectamos em 6 minutos e recuperamos em 3, sem
