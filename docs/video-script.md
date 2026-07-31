@@ -663,7 +663,7 @@ que esperar, não para decorar.
 
 **Abrir** [`finops-forecast.md`](finops-forecast.md)
 
-> **Falar**: "A previsão é linha a linha. Dá **150 dólares por mês** se ficasse
+> **Falar**: "A previsão é linha a linha. Dá **171 dólares por mês** se ficasse
 > ligado o tempo todo.
 >
 > E o maior item nem é computação: são 73 dólares só do painel de controle do
@@ -830,7 +830,7 @@ kubectl -n solidarytech top pods
 
 > **Falar**: "Eu encerro derrubando tudo. E isso faz parte da demonstração.
 >
-> Tudo que vocês viram custa mais ou menos **20 centavos de dólar por hora**
+> Tudo que vocês viram custa mais ou menos **24 centavos de dólar por hora**
 > enquanto está de pé. E some inteiro com um comando. É isso que torna a
 > contingência sob demanda possível, e a conta pagável por uma ONG.
 >

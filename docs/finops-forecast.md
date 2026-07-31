@@ -21,10 +21,10 @@ Premissas: região `us-east-1`, preços on-demand públicos da AWS (julho/2026),
 | # | Recurso (Terraform) | Especificação | Preço unitário | Custo/mês |
 |---|---|---|---|---|
 | 1 | EKS control plane (`modules/eks`) | 1 cluster, v1.31 | US$ 0,10/h | **US$ 73,00** |
-| 2 | EC2 node group (`modules/eks`) | 2 × `t3.medium` **Spot** | ~US$ 0,0125/h (vs. 0,0416 on-demand) | **US$ 18,25** |
+| 2 | EC2 node group (`modules/eks`) | **4** × `t3.medium` **Spot** | ~US$ 0,0125/h (vs. 0,0416 on-demand) | **US$ 36,50** |
 | 3 | NAT Gateway (`modules/network`) | 1 único (não 1 por AZ) | US$ 0,045/h + US$ 0,045/GB | **US$ 35,00** |
 | 4 | RDS Postgres (`modules/rds-postgres`) | `db.t4g.micro`, single-AZ, 20 GiB gp3 | US$ 0,016/h + US$ 0,115/GB-mês | **US$ 13,98** |
-| 5 | EBS dos nós | 2 × 20 GiB gp3 (root dos nós) | US$ 0,08/GB-mês | **US$ 3,20** |
+| 5 | EBS dos nós | **4** × 20 GiB gp3 (root dos nós) | US$ 0,08/GB-mês | **US$ 6,40** |
 | 6 | EBS dos PVCs (observabilidade) | 10 GiB Prometheus + 10 GiB Loki | US$ 0,08/GB-mês | **US$ 1,60** |
 | 7 | CloudWatch Logs | logs do control plane EKS (`api`, `audit`, `authenticator`) | US$ 0,50/GB ingerido | **~US$ 2,50** |
 | 8 | ECR (`modules/ecr`) | 3 repositórios + replicação para `us-east-2` | US$ 0,10/GB-mês | **~US$ 0,40** |
@@ -32,7 +32,7 @@ Premissas: região `us-east-1`, preços on-demand públicos da AWS (julho/2026),
 | 10 | SQS (`modules/sqs`) | fila + DLQ, volume do hackathon | 1M req/mês grátis, depois US$ 0,40/M | **~US$ 0,05** |
 | 11 | S3 (state do Terraform) | versionado, poucos MB | US$ 0,023/GB-mês | **< US$ 0,10** |
 | 12 | Transferência de dados de saída | tráfego das demos | US$ 0,09/GB (após 100 GB grátis) | **~US$ 1,00** |
-| | **TOTAL 24/7** | | | **≈ US$ 150/mês** |
+| | **TOTAL 24/7** | | | **≈ US$ 171/mês** |
 
 ### O que *não* está na tabela (e por quê)
 
@@ -59,11 +59,11 @@ ambiente de pé**:
 
 | Ambiente | Custo/hora |
 |---|---|
-| `envs/primary` completo | ≈ US$ 0,205/h |
+| `envs/primary` completo | ≈ US$ 0,235/h |
 | `envs/dr` completo (durante um ensaio) | ≈ US$ 0,190/h |
 
 Um ciclo de demo de 4 horas com as duas regiões de pé custa **menos de
-US$ 1,60**. Foi essa decisão — e não uma negociação de desconto — que tornou o
+US$ 1,80**. Foi essa decisão — e não uma negociação de desconto — que tornou o
 projeto viável em conta pessoal.
 
 ### Custo do DR sob demanda
@@ -82,7 +82,7 @@ RTO de ~25 min (medido no ensaio — ver `dr-plan.md`) em vez de ~5 min.
 
 | Recomendação | Onde | Economia |
 |---|---|---|
-| **Nós EC2 em Spot** em vez de on-demand | `modules/eks` (`node_capacity_type = "SPOT"`) | US$ 42,50/mês (−70% do custo de EC2) |
+| **Nós EC2 em Spot** em vez de on-demand | `modules/eks` (`node_capacity_type = "SPOT"`) | US$ 85/mês (−70% do custo de EC2) |
 | **1 NAT Gateway em vez de 1 por AZ** | `modules/network` (`single_nat_gateway = true`) | US$ 32,85/mês (−50%; o padrão do módulo VPC é um por AZ) |
 | **VPC endpoints gateway (S3 e DynamoDB)** | `modules/network` | Endpoints gateway são gratuitos e tiram o tráfego de imagens/DynamoDB do NAT, que cobra US$ 0,045/GB processado |
 | **DR sob demanda em vez de standby permanente** | `envs/dr` + `scripts/activate-dr.sh` | US$ 145/mês (−100% do custo ocioso do DR) |
@@ -99,7 +99,7 @@ serviço — custaria **≈ US$ 420/mês**. O forecast atual é **~64% menor**.
 ### Próximos passos (não implementados)
 
 1. **Trocar o NAT Gateway por uma NAT instance `t4g.nano`** — hoje o NAT é o
-   segundo maior item da conta (US$ 35/mês) e serve a um cluster de 2 nós que
+   segundo maior item da conta (US$ 35/mês) e serve a um cluster de 4 nós que
    basicamente só busca imagens do ECR. Uma NAT instance custaria ~US$ 3,00/mês
    (−91%), ao preço de perder a alta disponibilidade gerenciada e de ter mais
    um host para operar. Não implementado porque, num projeto cujo cluster fica
@@ -214,7 +214,7 @@ Racional das diferenças:
   ocupa ~100 MiB antes de atender a primeira requisição.
 - **`requests` baixo, `limits` ~4× maior**: `requests` é o que o scheduler
   reserva (e a base de cálculo do HPA); `limits` é o teto de burst. Em um
-  cluster de 2 × `t3.medium` (2 vCPU / 4 GiB cada), um `requests` folgado
+  cluster de 4 × `t3.medium` (2 vCPU / 4 GiB cada), um `requests` folgado
   esgotaria a capacidade alocável antes de a CPU ser realmente usada.
 - **Só o Hot Path tem HPA**: `donation-service` escala de 2 a 4 réplicas a 70%
   de CPU sobre o `request` (ou seja, ~35m de uso médio). `ngo-service` e
@@ -259,7 +259,19 @@ réplicas sob carga, o `request` de CPU está alto demais para o alvo de 70%.
 
 ### Saturação do cluster (o outro lado do rightsizing)
 
-Rightsizing não é só o pod: é o pod *dentro* do nó. Com 2 × `t3.medium`
+> ⚠️ **Por que 4 nós e não 2** (medido no cluster real, 2026-07-25): o limite que
+> forçou a subida **não foi CPU nem memória — foi pods por nó**. O VPC CNI da AWS
+> aloca IPs por interface de rede, e um `t3.medium` comporta 3 ENIs × 6 IPs − 1 =
+> **17 pods**. Com a stack de observabilidade, os 2 nós bateram esse teto com CPU
+> em ~50% e memória em ~45%: qualquer painel de recurso mostraria o cluster
+> folgado, enquanto pods ficavam `Pending` com `Too many pods`.
+>
+> Isso **dobrou os itens 2 e 5** da tabela (US$ 21,45/mês a mais). Existe uma
+> alternativa de custo zero, registrada no código e não aplicada por exigir
+> reciclar os nós: `ENABLE_PREFIX_DELEGATION` no addon `vpc-cni`, que eleva o teto
+> para ~110 pods/nó e permitiria voltar a 2 nós. É a primeira otimização da fila.
+
+Rightsizing não é só o pod: é o pod *dentro* do nó. Com 4 × `t3.medium`
 (~3,5 GiB alocáveis por nó), a soma dos `requests` da plataforma
 (kube-prometheus-stack + Loki + Promtail + ArgoCD + `nri-bundle`) é bem maior
 que a dos três serviços — é o risco nº 3 do `PROJECT_SPEC`. Foi por isso que a
