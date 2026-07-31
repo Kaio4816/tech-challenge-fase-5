@@ -255,9 +255,3 @@ jobs:
           done
           echo "::error::não foi possível empurrar o bump do GitOps após 5 tentativas"
           exit 1
-
-# Gatilho de rebuild: ECR recriado do zero na janela de verificação da F5 (2026-07-25).
-
-# Gatilho de rebuild: ECR recriado para a gravacao do video (2026-07-27).
-# rebuild: ECR recriado em 2026-07-29
-# rebuild 20260730-2234

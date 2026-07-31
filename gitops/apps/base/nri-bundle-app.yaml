@@ -29,8 +29,7 @@ spec:
         # nri-prometheus/newrelic-logging desligados: métricas já vão via
         # OTLP direto dos apps (tracing.go/app.py) + kube-prometheus-stack;
         # logs já vão via Loki/Promtail (gitops/apps/base/promtail-app.yaml).
-        # Duplicar aqui só custaria memória extra nos nós (risco #3 do
-        # PROJECT_SPEC).
+        # Duplicar aqui só custaria memória extra nos nós.
         nri-prometheus:
           enabled: false
         newrelic-logging:

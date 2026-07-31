@@ -24,7 +24,7 @@ flowchart TD
 | `warning` | burn rate 6×, p95 > 300ms, anomalia de baseline | investigar no mesmo dia; virar tarefa | sim, agrupado |
 | (sem alerta) | pod reiniciado e recuperado pelo probe antes de afetar o SLI | nenhuma — é o sistema se curando | não |
 
-A terceira linha é deliberada: o `PROJECT_SPEC` pede MTTR baixo, e a forma mais
+A terceira linha é deliberada. A forma mais
 eficaz de reduzir MTTR é fazer com que a maior parte das falhas **nunca se
 torne incidente**. Probes `/health`/`/ready` + `selfHeal` do ArgoCD + HPA
 resolvem sozinhos a maioria dos modos de falha; o alerta existe para o que

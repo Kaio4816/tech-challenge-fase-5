@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Gera carga contra POST /donations (o Hot Path) para sustentar a demo de
-# MTTR da Fase 5 (PROJECT_SPEC): sobe carga com este script, injeta uma
+# MTTR: sobe carga com este script, injeta uma
 # falha (ex.: `kubectl -n solidarytech delete pod -l app.kubernetes.io/name=donation-service`
 # ou escalar ngo-service para 0), observa o alerta no Prometheus/dashboard
 # Grafana (gitops/platform/) e o self-heal do ArgoCD/HPA, cronometrando o

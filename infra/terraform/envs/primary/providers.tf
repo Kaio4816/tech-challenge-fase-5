@@ -10,7 +10,7 @@ provider "aws" {
 # RDS só para permitir a criação dos databases ngo_db/donation_db (ver
 # provider "postgresql" abaixo e módulo rds-postgres). Em uma operação real
 # isso rodaria de dentro da VPC (bastion/SSM/CI runner); aqui é o trade-off
-# custo/simplicidade descrito no PROJECT_SPEC.
+# trade-off custo/simplicidade assumido neste projeto.
 data "http" "my_ip" {
   url = "https://checkip.amazonaws.com"
 }

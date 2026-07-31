@@ -39,7 +39,7 @@ Premissas: região `us-east-1`, preços on-demand públicos da AWS (julho/2026),
 - **ALB / Ingress (~US$ 20/mês)**: nenhum `Service` do tipo `LoadBalancer` é
   criado. Acesso à UI do ArgoCD, ao Grafana e aos serviços é via
   `kubectl port-forward` (ver README). Isso economiza ~US$ 20/mês **e** evita
-  o risco nº 1 do `PROJECT_SPEC` (load balancer criado pelo Kubernetes fora do
+  o risco de load balancer criado pelo Kubernetes fora do
   Terraform prendendo o `terraform destroy`). Se a plataforma fosse exposta
   publicamente, somar US$ 16,43 (hora do ALB) + ~US$ 4 (LCUs) ao total.
 - **ElastiCache**: citado no README original do desafio, mas nenhum dos três
@@ -274,7 +274,7 @@ réplicas sob carga, o `request` de CPU está alto demais para o alvo de 70%.
 Rightsizing não é só o pod: é o pod *dentro* do nó. Com 4 × `t3.medium`
 (~3,5 GiB alocáveis por nó), a soma dos `requests` da plataforma
 (kube-prometheus-stack + Loki + Promtail + ArgoCD + `nri-bundle`) é bem maior
-que a dos três serviços — é o risco nº 3 do `PROJECT_SPEC`. Foi por isso que a
+que a dos três serviços — é o principal risco de saturação. Foi por isso que a
 Fase 5 desligou `newrelic-logging` e `nri-prometheus` no `nri-bundle` (logs já
 vão via Loki) e fixou `retention: 2d` no Prometheus. Se a memória apertar, a
 ordem de corte é: `nri-bundle` → Loki → subir para `t3.large` (que somaria

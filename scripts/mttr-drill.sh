@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Ensaio cronometrado de MTTR (Fase 5 do PROJECT_SPEC), automatizado para que
+# Ensaio cronometrado de MTTR, automatizado para que
 # os números do post-mortem (docs/postmortem-mttr-demo.md) sejam MEDIDOS e não
 # estimados.
 #

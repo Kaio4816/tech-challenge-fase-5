@@ -34,7 +34,7 @@ Terraform e estão ativas. Detalhes e encaminhamento na ação corretiva nº 7 d
 
 `terraform destroy` do `envs/primary`: **`Destroy complete! Resources: 90 destroyed`**,
 sem nenhum erro e **sem a ENI órfã do VPC CNI** que travou o ciclo anterior
-(risco nº 1 do `PROJECT_SPEC` — não se materializou desta vez).
+(risco conhecido do ciclo de destroy — não se materializou desta vez).
 
 **Armadilha na conferência de órfãos** (custou uma investigação e vale
 registrar): logo após o destroy, a Resource Groups Tagging API **ainda lista

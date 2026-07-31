@@ -2,7 +2,7 @@
 
 > **Status: ensaio executado contra o cluster real em 2026-07-25.**
 > Este é o post-mortem do incidente **injetado deliberadamente** na demo de
-> MTTR (Fase 5 do `PROJECT_SPEC`). Todos os tempos abaixo foram **medidos**,
+> MTTR. Todos os tempos abaixo foram **medidos**,
 > não estimados — evidência bruta em
 > [`evidencias/mttr-detect/`](evidencias/mttr-detect/) (timeline em UTC,
 > saída do gerador de carga e estado dos alertas do Prometheus).

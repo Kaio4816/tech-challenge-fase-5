@@ -1,7 +1,7 @@
 # RDS Postgres custo-mínimo: 1 instância db.t4g.micro single-AZ. Reusado tanto
 # no primary (nasce vazia) quanto no dr (nasce restaurada de um snapshot via
 # var.snapshot_identifier) — é essa reutilização que materializa o warm
-# standby descrito no PROJECT_SPEC.
+# standby (ver docs/dr-plan.md).
 
 resource "aws_db_subnet_group" "this" {
   name       = "${var.name_prefix}-db-subnets"
