@@ -482,10 +482,16 @@ Grafana → *Explore* → datasource **Loki** → `{namespace="solidarytech"}`
 
 ## Bloco 7 — Um incidente do início ao fim (2,5 min) ⭐
 
+> 📍 **Posição no vídeo final**: este bloco entra **depois dos blocos 8, 9 e 10**,
+> logo antes do encerramento. As falas abaixo já assumem isso — elas fazem a ponte
+> a partir do bloco de continuidade e entregam no encerramento. Se você decidir
+> voltar para a ordem numérica na edição, troque a frase de abertura e a de
+> fechamento pelas alternativas marcadas *(ordem numérica)*.
+
 **Como gravar**: rode o ensaio **antes** e deixe terminar (leva ~10 min de
-relógio, com ~6 minutos de espera até o alerta). Depois grave numa tomada só,
-narrando a linha do tempo completa que ficou no terminal. Sem tempo morto, sem
-corte na edição.
+relógio, com ~6 minutos de espera até o alerta). Grave os blocos 8, 9 e 10 nessa
+janela e volte aqui no fim, narrando numa tomada só a linha do tempo que ficou no
+terminal. Sem tempo morto, sem corte na edição.
 
 ```bash
 NGO_ID=3 BASELINE_SECS=120 ./scripts/mttr-drill.sh detect 18m 8
@@ -507,11 +513,20 @@ carga que o drill sobe faz o `kubectl top pods` do bloco 8 mostrar consumo real.
 > no terminal e no pico do gráfico. Se quiser o vermelho ao vivo, é a opção de
 > gravar durante o ensaio — mas aí vêm os 6 minutos de espera junto.
 
-> **Falar**: "Tudo que eu mostrei está de pé e saudável. Então eu quebrei de
-> propósito, com cronômetro. Isso aqui é o resultado.
+> **Falar**: "Eu acabei de mostrar o plano para o pior caso: uma região inteira
+> caindo. Agora o caso comum — uma falha pequena, num serviço só, do início ao
+> fim. E com cronômetro.
+>
+> Lembra daquele ciclo que eu mostrei há pouco? Detecção, alerta, tratamento,
+> post-mortem. Isso aqui é ele acontecendo de verdade.
 >
 > O incidente é realista: eu derrubei o `ngo-service`, que é a dependência do
-> caminho crítico. Aquela seta do começo do vídeo."
+> caminho crítico. Aquela seta lá do começo do vídeo. Isso aqui é o resultado."
+
+> *(ordem numérica — se o bloco vier logo depois do 6)*: "Tudo que eu mostrei está
+> de pé e saudável. Então eu quebrei de propósito, com cronômetro. O incidente é
+> realista: derrubei o `ngo-service`, a dependência do caminho crítico. Aquela seta
+> do começo do vídeo. Isso aqui é o resultado."
 
 > ✅ **O drill valida a própria medição.** Se a linha de base do p95 já estiver
 > acima dos 300 ms do SLO, ele **aborta** com instrução de reduzir a concorrência,
@@ -616,7 +631,14 @@ que esperar, não para decorar.
 
 > **Frase de fechamento** *(troque pelos tempos que apareceram na sua tela)*:
 > "Detectamos em cerca de 6 minutos e recuperamos em menos de um, sem ninguém
-> intervir. E o ensaio mostrou o gargalo real: é a detecção, não a correção."
+> intervir. E o ensaio mostrou o gargalo real: é a detecção, não a correção.
+>
+> Com isso o ciclo fecha: falha, detecção, alerta, recuperação e post-mortem — os
+> cinco estágios que eu mostrei no diagrama, agora cronometrados. Só me resta
+> derrubar tudo."
+>
+> *(ordem numérica)*: encerre em "…é a detecção, não a correção." e siga para o
+> bloco 8.
 
 ## Bloco 8 — FinOps (1,5 min)
 
@@ -682,8 +704,9 @@ kubectl -n solidarytech top pods
 
 **Percurso**: caixas 1 → 5, e **por último** a seta pontilhada.
 
-> **Falar**: "O incidente que vocês viram não é um evento solto. Ele percorre um
-> processo, e cada caixa aqui aponta pra um arquivo que existe no repositório.
+> **Falar**: "Daqui a pouco eu vou mostrar um incidente do início ao fim, com
+> cronômetro. Antes disso, o processo que ele percorre — porque incidente não é
+> evento solto. Cada caixa aqui aponta pra um arquivo que existe no repositório.
 >
 > Detecção em três camadas. O Prometheus pega violação de contrato. O New Relic
 > pega desvio do normal. E o Kubernetes pega pod morto, em segundos.
