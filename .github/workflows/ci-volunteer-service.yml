@@ -261,3 +261,4 @@ jobs:
 
 # Gatilho de rebuild: ECR recriado para a gravacao do video (2026-07-27).
 # rebuild: ECR recriado em 2026-07-29
+# rebuild 20260730-2234
