@@ -381,7 +381,7 @@ aws dynamodb scan --table-name SolidaryTechVolunteers --region us-east-1 \
 ## Bloco 6 — Observabilidade e SRE (3 min)
 
 > ⏱ **Dispare o ensaio de MTTR num terminal separado ANTES deste bloco.** A
-> detecção leva uns 6 a 7 minutos e você volta nele no bloco 7. (Se for gravar
+> detecção leva de 6 a 9 minutos e você volta nele no bloco 7. (Se for gravar
 > pela opção B — narrar a linha do tempo já pronta — veja as instruções no
 > começo do bloco 7.)
 >
@@ -489,7 +489,7 @@ Grafana → *Explore* → datasource **Loki** → `{namespace="solidarytech"}`
 > fechamento pelas alternativas marcadas *(ordem numérica)*.
 
 **Como gravar**: rode o ensaio **antes** e deixe terminar (leva ~10 min de
-relógio, com ~6 minutos de espera até o alerta). Grave os blocos 8, 9 e 10 nessa
+relógio, com ~9 minutos de espera até o alerta). Grave os blocos 8, 9 e 10 nessa
 janela e volte aqui no fim, narrando numa tomada só a linha do tempo que ficou no
 terminal. Sem tempo morto, sem corte na edição.
 
@@ -511,7 +511,7 @@ carga que o drill sobe faz o `kubectl top pods` do bloco 8 mostrar consumo real.
 > **não** vai mostrar `DonationServiceHighLatencyP95` em vermelho. Não abra essa
 > tela prometendo o vermelho. A prova está no carimbo de hora do `ALERTA_FIRING`
 > no terminal e no pico do gráfico. Se quiser o vermelho ao vivo, é a opção de
-> gravar durante o ensaio — mas aí vêm os 6 minutos de espera junto.
+> gravar durante o ensaio — mas aí vêm os ~9 minutos de espera junto.
 
 > **Falar**: "Eu acabei de mostrar o plano para o pior caso: uma região inteira
 > caindo. Agora o caso comum — uma falha pequena, num serviço só, do início ao
@@ -592,6 +592,12 @@ que ficou no terminal:
 >
 > Isso é o self-heal: o estado desejado está no Git, o cluster divergiu, e ele
 > desfez a divergência sozinho."
+
+> ℹ️ **Os tempos variam entre rodadas.** Já medi recuperação de 37 s, 157 s e
+> 196 s, e detecção de 373 s, 424 s e 520 s. Depende de quanto o agendador demora
+> a colocar o pod num nó e de onde a janela de 5 min da métrica cai. **Leia os
+> números da sua tela** — o que é constante, e é o que importa, é que ninguém
+> intervém e que detectar leva mais tempo que corrigir.
 
 > **Falar (3) — detectar é mais lento que corrigir**: "E aqui o achado mais
 > interessante, que é meio desconfortável.
