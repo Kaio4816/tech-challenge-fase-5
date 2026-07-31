@@ -723,53 +723,74 @@ kubectl -n solidarytech top pods
 
 **Na tela**: `infra/terraform/newrelic/main.tf`
 
-**Quatro linhas, nesta ordem.** O argumento é a comparação entre as duas
-primeiras — role de uma para a outra, não aponte só a `baseline`:
+Cinco paradas no arquivo. Role de uma para a outra falando — cada parada é uma
+frase curta, não um parágrafo.
 
-| Linha | Conteúdo | Por que mostrar |
-|---|---|---|
-| **66** | `type = "static"` | alerta comum: o limiar sou **eu** que escolhi |
-| **134** | `type = "baseline"` | limiar que a ferramenta **aprende** |
-| **146** | `baseline_direction = "upper_and_lower"` | desvio nos dois sentidos conta |
-| **147** | `signal_seasonality = "NEW_RELIC_CALCULATION"` | o "aprende" literal, no código |
-| **155** | `query = "... FROM Span WHERE ..."` | o dado vem do OTLP, não de agente APM |
+---
 
-> **Falar**: "E aqui a parte de inteligência artificial que o edital pede.
+**① Vá para a linha 66** e deixe na tela `type = "static"`.
+
+> "Essa é uma condição de alerta comum. Olha o tipo: **estático**. O limiar sou
+> eu que escolhi — 300 milissegundos, porque eu decidi que 300 é o meu limite."
+
+---
+
+**② Role até a linha 134**, `type = "baseline"`. Deixe as duas visíveis se couber.
+
+> "Agora essa. Mesmo tipo de recurso, mas o tipo é **baseline**. Aqui eu não digo
+> o número. O New Relic aprende como o serviço se comporta e avisa quando ele foge
+> do padrão.
 >
-> Olha essas duas linhas. Nessa, o tipo é **estático**: o limiar sou eu que
-> escolhi, 300 milissegundos. Nessa outra, o tipo é **baseline**: o New Relic
-> aprende como o serviço se comporta normalmente e avisa quando ele foge do
-> padrão.
+> A diferença prática: alerta comum só existe **depois** que já teve erro. O
+> baseline dispara quando o comportamento **muda** — mesmo sem erro nenhum."
+
+---
+
+**③ Desça 12 linhas, até a 146**, `baseline_direction = "upper_and_lower"`.
+
+> "E repara nessa: eu monitoro desvio nos **dois** sentidos.
 >
-> A diferença prática é essa: alerta comum só existe depois que já teve erro. O
-> baseline dispara quando o comportamento **muda**, mesmo sem erro nenhum.
->
-> E repara nessa linha aqui, o `upper_and_lower`: eu monitoro desvio nos **dois**
-> sentidos. Pico é óbvio. Mas **queda** de doações é o pior cenário para uma ONG,
-> e é invisível para qualquer alerta de erro — porque não tem erro, simplesmente
-> parou de chegar dinheiro.
->
-> Essa aqui, o `signal_seasonality`, é o 'aprende' literal: é o parâmetro que
-> manda a ferramenta calcular a sazonalidade do sinal.
->
-> E o dado vem de `Span`. Não tem agente de APM: é o mesmo OTLP que gera o
-> rastreamento distribuído. Uma instrumentação só, servindo para o trace e para a
-> detecção de anomalia.
->
-> E olha que isso tudo é Terraform, não configuração clicada. Alerta configurado
-> na mão é alerta que se perde no próximo ambiente."
+> Pico é óbvio. Mas **queda** de doações é o pior cenário para uma ONG, e é
+> invisível para qualquer alerta de erro — porque não tem erro. Simplesmente parou
+> de chegar dinheiro."
+
+---
+
+**④ Linha 147**, logo abaixo: `signal_seasonality = "NEW_RELIC_CALCULATION"`.
+
+> "E essa aqui é o 'aprende' literal. É o parâmetro que manda a ferramenta
+> calcular a sazonalidade do sinal."
+
+---
+
+**⑤ Linha 155**, a consulta.
+
+> "E o dado vem de `Span`. Não tem agente de APM instalado: é o mesmo OTLP que
+> gera o rastreamento distribuído. Uma instrumentação só, servindo para o trace e
+> para a detecção de anomalia."
+
+---
+
+**Feche o arquivo com esta frase**, que é a que amarra o bloco:
+
+> "E tudo isso é Terraform, não configuração clicada. Alerta configurado na mão é
+> alerta que se perde no próximo ambiente."
 
 > 💡 **Se sobrar tempo**: as linhas **136–141** são a descrição da condição,
 > escrita em português dentro do próprio código, explicando por que
-> `upper_and_lower`. Vale um segundo de tela — mostra que a decisão está
-> documentada onde é aplicada, não num wiki à parte.
+> `upper_and_lower`. Um segundo de tela — mostra que a decisão está documentada
+> onde é aplicada, não num wiki à parte.
 
-**Depois, no New Relic**:
+---
+
+**Agora troque para o New Relic**:
 <https://one.newrelic.com/alerts/condition-builder/condition-list>
 
-> **Falar**: "E aplicado na conta: cinco condições. Olha a coluna de tipo — duas
-> são **NRQL Baseline**, três são limiar fixo. É o mesmo contraste que eu acabei
-> de mostrar no código, agora rodando."
+Aponte a **coluna `Type`**.
+
+> "E aplicado na conta: cinco condições. Duas são **NRQL Baseline**, três são
+> limiar fixo. É o mesmo contraste que eu acabei de mostrar no código, agora
+> rodando de verdade."
 
 > **Frase de fechamento**: "Detecção preditiva é o limiar aprendido, não o limiar
 > fixo. Ele dispara quando o comportamento muda, antes de a meta ser violada."
