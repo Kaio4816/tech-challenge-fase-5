@@ -582,12 +582,14 @@ curl -sS localhost:8082/donations | tail -c 300
 > Porque a validação é *fail-open*: se o outro serviço cai, a doação é registrada
 > mesmo assim. Só um 'ONG não existe' explícito rejeita.
 >
-> Repara na consequência: a queda da dependência virou **lentidão, não erro**. E
-> como o orçamento de erro está atrelado a falha, ele saiu **intacto** deste
-> incidente. Nenhum alerta de erro disparou — só o de latência.
+> E olha o efeito disso: a dependência caiu e **não gerou erro nenhum**. Gerou
+> lentidão.
 >
-> Isso muda a forma de investigar: quem procurar erro aqui vai procurar no lugar
-> errado. Está escrito no runbook por causa disso."
+> Isso muda tudo, porque o meu orçamento de erro conta falha. Não conta demora.
+> Então esse incidente inteiro não gastou nada dele. Saiu zerado.
+>
+> E aí mora uma armadilha: quem for investigar isso procurando erro não vai achar
+> nada. Vai procurar no lugar errado. Foi por isso que eu escrevi isso no runbook."
 
 *Alternativa, se preferir não usar o terminal*: o painel **Errors** do dashboard
 SRE em 0% durante todo o incidente prova a mesma coisa e é mais visual.
