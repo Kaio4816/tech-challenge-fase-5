@@ -533,24 +533,84 @@ carga que o drill sobe faz o `kubectl top pods` do bloco 8 mostrar consumo real.
 > em vez de seguir e produzir um número que parece válido e não é. Ou seja: se o
 > ensaio chegou até o fim, a medição é confiável. Isso vale citar em uma frase.
 
-**Narrar os marcos da linha do tempo.** A coluna do meio é o rótulo **exatamente
-como aparece na tela** — fale sempre o número que está escrito ali.
+**Sete paradas, na ordem em que a linha do tempo aparece.** Cada parada tem o
+rótulo **exatamente como está na tela** e a fala correspondente. Os pontos que
+valem nota já estão embutidos onde eles surgem naturalmente — não há discurso
+separado no fim.
 
-| Na tela | O que dizer |
-|---|---|
-| `BASELINE_P95_MS 14` | "Antes de quebrar nada, o script mediu a linha de base: **14 milissegundos**. Bem abaixo do meu limite de 300. É a partir daqui que a comparação vale." |
-| `T0_INICIO_IMPACTO` | "Aqui começa o incidente. Derrubei a dependência para zero réplicas." |
-| `FALHA_EFETIVA (+3s)` | "Confirmado em **3 segundos**: zero réplicas prontas. A dependência sumiu de verdade." |
-| `DEGRADACAO_P95 p95=898ms (+65s)` | "**Sessenta e cinco segundos** depois, a latência sai de 14 milissegundos e vai para **898**. É o Hot Path esperando o timeout da dependência." |
-| — *(alterne para o `curl`)* | "Mas olha o que importa: **nenhuma doação falhou**. Continua gravando normalmente, com a dependência fora do ar." |
-| `ALERTA_FIRING (+519s)` | "**519 segundos** até o alerta disparar." |
-| `T1_DETECCAO MTTD=520s` | "E aqui o script fecha a conta: **MTTD de 520 segundos**. Esse é o tempo de detecção." |
-| `LIBERACAO` | "Agora eu solto o incidente e paro de segurar. Daqui pra frente é o ArgoCD." |
-| `T3_RECUPERADO (+677)s` | "E recuperou em **677 segundos** contados do início, sem eu digitar nada. Como eu soltei aos 520, a recuperação em si levou **157 segundos** — é a diferença entre esses dois números." |
-| `T4_FIM_IMPACTO MTTR=847s` | "**847 segundos** até os alertas resolverem." |
-| `P95_FINAL_MS 14` | "E a latência voltou exatamente ao ponto de partida: **14 milissegundos**, o mesmo número da linha de base." |
+---
 
-**No resumo do rodapé**, os quatro números que o script imprime são:
+**① `BASELINE_P95_MS 14`**
+
+> "Antes de quebrar qualquer coisa, o script mede a linha de base e compara com o
+> meu limite. Deu **14 milissegundos**, contra um SLO de 300. Medição válida.
+>
+> E essa verificação existe porque um ensaio anterior deu errado: a minha própria
+> carga de teste estava saturando o banco, e a latência já estava em 352
+> milissegundos **antes** da falha. O alerta disparou, mas estava medindo o
+> gerador de carga, não o incidente. O número parecia perfeitamente válido.
+>
+> Medição que não sabe dizer quando está inválida é pior que não medir. Hoje o
+> ensaio se recusa a rodar nessa condição."
+
+---
+
+**② `T0_INICIO_IMPACTO` → `FALHA_EFETIVA (+3s)`**
+
+> "Aqui começa o incidente: derrubei a dependência para zero réplicas. E em **3
+> segundos** o script confirma que ela saiu do ar de verdade — ele não confia no
+> comando, ele verifica."
+
+---
+
+**③ `DEGRADACAO_P95 p95=898ms (+65s)`**
+
+> "**Sessenta e cinco segundos** depois, a latência sai de 14 milissegundos e vai
+> para **898**. É o Hot Path esperando o timeout da dependência."
+
+---
+
+**④ Alterne para o terminal do `curl`** — este é o ponto mais importante do bloco
+
+```bash
+curl -s localhost:8082/donations | tail -c 300
+```
+
+> "E agora o que realmente importa: **nenhuma doação falhou**. Com a dependência
+> fora do ar, continua gravando normalmente.
+>
+> Porque a validação é *fail-open*: se o outro serviço cai, a doação é registrada
+> mesmo assim. Só um 'ONG não existe' explícito rejeita.
+>
+> Repara na consequência: a queda da dependência virou **lentidão, não erro**. E
+> como o orçamento de erro está atrelado a falha, ele saiu **intacto** deste
+> incidente. Nenhum alerta de erro disparou — só o de latência.
+>
+> Isso muda a forma de investigar: quem procurar erro aqui vai procurar no lugar
+> errado. Está escrito no runbook por causa disso."
+
+---
+
+**⑤ `ALERTA_FIRING (+519s)` → `T1_DETECCAO MTTD=520s`**
+
+> "**519 segundos** até o alerta disparar, e o script fecha a conta: **MTTD de 520
+> segundos**. Esse é o tempo de detecção."
+
+---
+
+**⑥ `LIBERACAO` → `T3_RECUPERADO (+677)s` → `P95_FINAL_MS 14`**
+
+> "Aqui eu solto o incidente e paro de segurar. Daqui pra frente é o ArgoCD.
+>
+> E recuperou aos **677 segundos**, sem eu digitar nada. É o self-heal: o estado
+> desejado está no Git, o cluster divergiu, e ele desfez a divergência sozinho.
+>
+> E a latência voltou a **14 milissegundos** — exatamente o número da linha de
+> base. O sistema fechou o ciclo sozinho."
+
+---
+
+**⑦ O resumo do rodapé** — aponte estas quatro linhas:
 
 ```
 MTTD = 520s
@@ -559,87 +619,35 @@ Holder liberado (selfHeal assume) em +520s
 MTTR = 847s (meta: < 300s)
 ```
 
-> ⚠️ **Explique o `MTTR = 847s (meta: < 300s)`, não passe batido.** É a única linha
-> que parece um fracasso, e não é.
+> "E aqui o script diz que o MTTR total deu **847 segundos**, acima da minha meta
+> de 300. Preciso explicar esse número, porque ele é enganoso.
 >
-> Os 847 segundos são contados de `T0` até o alerta resolver, e **incluem os 520
-> segundos em que eu segurei a falha de propósito** para o alerta ter tempo de
-> disparar. Os três números do rodapé dão a conta inteira:
->
-> ```
-> holder liberado em +520s  →  recuperado em +677s   ⇒  157s de recuperação
-> recuperado em  +677s      →  MTTR de 847s          ⇒  170s para o alerta limpar
-> ```
->
-> A recuperação em si — que é o que a meta de 300 s mede — levou **157 segundos**.
-
-> **Falar (apontando as duas linhas do rodapé)**: "E aqui embaixo o script diz que
-> o MTTR total deu **847 segundos**, acima da minha meta de 300. Preciso explicar
-> esse número, porque ele é enganoso.
->
-> Olha essas duas linhas: o holder foi liberado aos **520 segundos**, e o serviço
+> Olha essas duas linhas: o holder foi liberado aos **520 segundos** e o serviço
 > recuperou aos **677**. A diferença é **157 segundos** — foi isso que a
 > recuperação levou de fato. Dentro da meta.
 >
 > O resto do total são os 8 minutos e meio em que eu **segurei a falha de
-> propósito**. Se eu soltasse antes, o alerta nem chegaria a disparar e eu não
-> teria o que mostrar.
+> propósito**, para o alerta ter tempo de disparar. Se eu soltasse antes, ele nem
+> chegaria a disparar e eu não teria o que mostrar.
 >
-> Então o que estourou o total não foi a correção. Foi o tempo que o sistema levou
-> para **perceber**."
-
-### Os pontos que valem nota
-
-> **Falar (1) — o fail-open**: "Repara no que **não** aconteceu. Nenhum alerta de
-> erro. Nenhuma doação perdida.
+> E aí está o achado mais interessante, que é meio desconfortável: **detectar levou
+> 520 segundos, corrigir levou 157**. A correção é mais de três vezes mais rápida
+> que a detecção.
 >
-> Porque a validação é o que se chama fail-open: se o outro serviço cai, a doação
-> é gravada mesmo assim. Só um 'ONG não existe' explícito rejeita.
+> Ou seja, sem eu segurar o incidente, o sistema **se curaria antes de perceber que
+> estava doente**. Ótimo pro usuário, péssimo pra quem opera — falha que não deixa
+> rastro é falha que se repete.
 >
-> Então a queda da dependência virou **lentidão, não erro**. E como o orçamento
-> de erro está ligado a falha, ele saiu **intacto** do incidente.
->
-> Consequência prática: quem for investigar isso procurando erro procura no lugar
-> errado. Está escrito no runbook por causa disso."
-
-> **Falar (2) — a recuperação automática**: "A recuperação não teve mão humana. Eu
-> soltei o incidente e o ArgoCD restaurou. *(diga o tempo que apareceu na tela)*
->
-> Isso é o self-heal: o estado desejado está no Git, o cluster divergiu, e ele
-> desfez a divergência sozinho."
-
-> ℹ️ **Os tempos variam entre rodadas.** Já medi recuperação de 37 s, 157 s e
-> 196 s, e detecção de 373 s, 424 s e 520 s. Depende de quanto o agendador demora
-> a colocar o pod num nó e de onde a janela de 5 min da métrica cai. **Leia os
-> números da sua tela** — o que é constante, e é o que importa, é que ninguém
-> intervém e que detectar leva mais tempo que corrigir.
-
-> **Falar (3) — detectar é mais lento que corrigir**: "E aqui o achado mais
-> interessante, que é meio desconfortável.
->
-> Detectar levou 520 segundos. Recuperar levou 157. A recuperação é **mais de três
-> vezes mais rápida** que a detecção.
->
-> Ou seja: sem eu segurar o incidente de propósito, o sistema **se cura antes de
-> perceber que está doente**. É ótimo pro usuário e péssimo pra quem opera, porque
-> falha que não deixa rastro é falha que se repete.
->
-> Eu não descobri isso no papel, descobri rodando. E virou ação corretiva no
+> Eu não descobri isso no papel. Descobri rodando. E virou ação corretiva no
 > post-mortem, com dono."
 
-> **Falar (4) — a medição que se valida**: "Uma coisa que eu acrescentei depois de
-> um ensaio dar errado: antes de quebrar qualquer coisa, o script mede a linha de
-> base e **compara com o SLO**. Se a linha de base já estiver acima do limiar, ele
-> aborta.
->
-> Porque numa rodada anterior a minha própria carga de teste estava saturando o
-> banco. A latência já estava em 352 milissegundos antes da falha, e durante a
-> falha ficou em 351. O alerta disparou, mas não estava medindo o incidente —
-> estava medindo o gerador de carga.
->
-> O número parecia perfeitamente válido. Medição que não sabe dizer quando está
-> inválida é pior que não medir. Então agora o ensaio se recusa a rodar nessa
-> condição."
+---
+
+> ℹ️ **Os tempos variam entre rodadas.** Já medi recuperação de 37 s, 157 s e
+> 196 s, e detecção de 373 s, 424 s e 520 s — depende de quanto o agendador demora
+> a colocar o pod num nó e de onde a janela de 5 min da métrica cai. **Leia os
+> números da sua tela.** O que é constante é que ninguém intervém e que detectar
+> leva mais tempo que corrigir.
 
 > ℹ️ **Se abrir a tela de alertas, explique o que já está vermelho lá.** O
 > kube-prometheus-stack traz dezenas de regras próprias, e 4 ficam permanentemente
@@ -647,16 +655,15 @@ MTTR = 847s (meta: < 300s)
 > ver:
 >
 > - **`Watchdog`** e **`InfoInhibitor`**: disparam *sempre*, por desenho. O
->   Watchdog é o alerta que prova que o pipeline de alertas está vivo; por isso a
->   nossa config do Alertmanager manda ele para um receiver nulo (volta no bloco 9).
+>   Watchdog prova que o pipeline de alertas está vivo; por isso o nosso
+>   Alertmanager manda ele para um receiver nulo (volta no bloco 9).
 > - **`KubeHpaMaxedOut`**: legítimo e a favor — o HPA do `donation-service` está no
 >   teto de 4 réplicas por causa da carga. É a prova de que ele escalou.
 > - **`CPUThrottlingHigh`** (severidade `info`): containers do node-exporter sendo
 >   limitados. Ruído conhecido de cluster pequeno.
 >
 > Para mostrar só os do projeto, use o campo **"Filter by rule name or labels"** e
-> digite `Donation`. Filtrar e explicar é melhor que rolar a tela torcendo para
-> ninguém perguntar.
+> digite `Donation`.
 
 > ⚠️ **Não prometa o que não vai acontecer**: `SolidaryTechTargetDown` **não**
 > dispara nesse cenário (com zero réplicas a série `up` desaparece, e ausência não
