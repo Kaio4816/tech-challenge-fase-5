@@ -533,45 +533,60 @@ carga que o drill sobe faz o `kubectl top pods` do bloco 8 mostrar consumo real.
 > em vez de seguir e produzir um número que parece válido e não é. Ou seja: se o
 > ensaio chegou até o fim, a medição é confiável. Isso vale citar em uma frase.
 
-**Narrar os marcos da linha do tempo.** Números da rodada de **31/07**, que é a
-que ficou no terminal:
+**Narrar os marcos da linha do tempo.** A coluna do meio é o rótulo **exatamente
+como aparece na tela** — fale sempre o número que está escrito ali.
 
-| Momento | O que dizer |
+| Na tela | O que dizer |
 |---|---|
 | `BASELINE_P95_MS 14` | "Antes de quebrar nada, o script mediu a linha de base: **14 milissegundos**. Bem abaixo do meu limite de 300. É a partir daqui que a comparação vale." |
 | `T0_INICIO_IMPACTO` | "Aqui começa o incidente. Derrubei a dependência para zero réplicas." |
-| `FALHA_EFETIVA` (+3s) | "Confirmado em 3 segundos: zero réplicas prontas. A dependência sumiu de verdade." |
-| `DEGRADACAO_P95` (+65s) | "Um minuto depois, a latência sai de 14 milissegundos e vai para **898**. Sessenta e quatro vezes mais lento. É o Hot Path esperando o timeout da dependência." |
-| — | "Mas olha o que importa: **nenhuma doação falhou**. Continua gravando normalmente, com a dependência fora do ar." |
-| `ALERTA_FIRING` (+519s) | "**520 segundos** até o alerta disparar. Uns 8 minutos e meio. Esse é o tempo de detecção." |
+| `FALHA_EFETIVA (+3s)` | "Confirmado em **3 segundos**: zero réplicas prontas. A dependência sumiu de verdade." |
+| `DEGRADACAO_P95 p95=898ms (+65s)` | "**Sessenta e cinco segundos** depois, a latência sai de 14 milissegundos e vai para **898**. É o Hot Path esperando o timeout da dependência." |
+| — *(alterne para o `curl`)* | "Mas olha o que importa: **nenhuma doação falhou**. Continua gravando normalmente, com a dependência fora do ar." |
+| `ALERTA_FIRING (+519s)` | "**519 segundos** até o alerta disparar." |
+| `T1_DETECCAO MTTD=520s` | "E aqui o script fecha a conta: **MTTD de 520 segundos**. Esse é o tempo de detecção." |
 | `LIBERACAO` | "Agora eu solto o incidente e paro de segurar. Daqui pra frente é o ArgoCD." |
-| `T3_RECUPERADO` (+677s) | "E recuperou em **2 minutos e 37 segundos** depois de eu soltar, sem eu digitar nada. O ArgoCD viu que o cluster estava diferente do Git e restaurou." |
-| `P95_FINAL_MS 14` | "E a latência voltou exatamente ao ponto de partida: 14 milissegundos." |
+| `T3_RECUPERADO (+677)s` | "E recuperou em **677 segundos** contados do início, sem eu digitar nada. Como eu soltei aos 520, a recuperação em si levou **157 segundos** — é a diferença entre esses dois números." |
+| `T4_FIM_IMPACTO MTTR=847s` | "**847 segundos** até os alertas resolverem." |
+| `P95_FINAL_MS 14` | "E a latência voltou exatamente ao ponto de partida: **14 milissegundos**, o mesmo número da linha de base." |
 
-> ⚠️ **O script imprime `MTTR = 847s (meta: < 300s)` — explique isso, não passe
-> batido.** É a única linha da tela que parece um fracasso, e não é.
+**No resumo do rodapé**, os quatro números que o script imprime são:
+
+```
+MTTD = 520s
+Serviço recuperado em +677s
+Holder liberado (selfHeal assume) em +520s
+MTTR = 847s (meta: < 300s)
+```
+
+> ⚠️ **Explique o `MTTR = 847s (meta: < 300s)`, não passe batido.** É a única linha
+> que parece um fracasso, e não é.
 >
-> Os 847 segundos são medidos de `T0` até o alerta resolver, e **incluem os 520
-> segundos em que eu segurei a falha de propósito**, para o alerta ter tempo de
-> disparar. A conta é:
+> Os 847 segundos são contados de `T0` até o alerta resolver, e **incluem os 520
+> segundos em que eu segurei a falha de propósito** para o alerta ter tempo de
+> disparar. Os três números do rodapé dão a conta inteira:
 >
 > ```
-> 847s = 520s segurando a falha + 157s de recuperação + 170s para o alerta limpar
+> holder liberado em +520s  →  recuperado em +677s   ⇒  157s de recuperação
+> recuperado em  +677s      →  MTTR de 847s          ⇒  170s para o alerta limpar
 > ```
 >
-> A recuperação em si — que é o que a meta de 5 minutos mede — levou **157
-> segundos**. Dentro da meta.
+> A recuperação em si — que é o que a meta de 300 s mede — levou **157 segundos**.
 
-> **Falar (quando chegar nessa linha)**: "E aqui embaixo o script diz que o MTTR
-> total deu 847 segundos, acima da minha meta de 300. Preciso explicar esse
-> número, porque ele é enganoso.
+> **Falar (apontando as duas linhas do rodapé)**: "E aqui embaixo o script diz que
+> o MTTR total deu **847 segundos**, acima da minha meta de 300. Preciso explicar
+> esse número, porque ele é enganoso.
 >
-> Esse total inclui os 8 minutos e meio em que eu **segurei a falha de propósito**.
-> Se eu soltasse antes, o alerta nem chegaria a disparar, e eu não teria o que
-> mostrar.
+> Olha essas duas linhas: o holder foi liberado aos **520 segundos**, e o serviço
+> recuperou aos **677**. A diferença é **157 segundos** — foi isso que a
+> recuperação levou de fato. Dentro da meta.
 >
-> A recuperação em si levou 157 segundos. Dentro da meta. O que estourou o total
-> não foi a correção — foi o tempo que o sistema levou para **perceber**."
+> O resto do total são os 8 minutos e meio em que eu **segurei a falha de
+> propósito**. Se eu soltasse antes, o alerta nem chegaria a disparar e eu não
+> teria o que mostrar.
+>
+> Então o que estourou o total não foi a correção. Foi o tempo que o sistema levou
+> para **perceber**."
 
 ### Os pontos que valem nota
 
@@ -655,8 +670,8 @@ que ficou no terminal:
 > ativa — ver a nota no início do bloco 6. Se ele abortar por linha de base alta,
 > copie o comando que ele mesmo imprime, já com a concorrência reduzida.
 
-> **Frase de fechamento**: "Detectamos em 8 minutos e meio e recuperamos em 2 e
-> meio, sem ninguém intervir. E o ensaio mostrou o gargalo real: é a detecção, não
+> **Frase de fechamento**: "Detectamos em 520 segundos e recuperamos em 157, sem
+> ninguém intervir. E o ensaio mostrou o gargalo real: é a detecção, não
 > a correção.
 >
 > Com isso o ciclo fecha: falha, detecção, alerta, recuperação e post-mortem — os
