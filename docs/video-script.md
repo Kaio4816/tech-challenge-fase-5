@@ -569,13 +569,12 @@ que esperar, não para decorar.
 > ⚠️ **Pré-requisito da rodada válida**: um único gerador de carga. O drill sobe o
 > seu próprio, então mate qualquer carga anterior antes (`pkill -f "hey -z"`) e
 > espere o p95 cair. O script verifica isso e recusa rodar se houver outra carga
-> ativa — ver a nota no início do bloco 6.
-> Se o aviso `BASELINE_INVALIDA` aparecer de novo, baixe mais a concorrência.
+> ativa — ver a nota no início do bloco 6. Se ele abortar por linha de base alta,
+> copie o comando que ele mesmo imprime, já com a concorrência reduzida.
 
-> **Frase de fechamento**: "Detectamos em 6 minutos e recuperamos em 3, sem
-> ninguém intervir. E o ensaio mostrou o gargalo real: é a detecção, não a
-> correção. Mostrou também que a minha carga de teste estava saturando o banco —
-> e é melhor descobrir isso num ensaio do que numa apresentação."
+> **Frase de fechamento** *(troque pelos tempos que apareceram na sua tela)*:
+> "Detectamos em cerca de 6 minutos e recuperamos em menos de um, sem ninguém
+> intervir. E o ensaio mostrou o gargalo real: é a detecção, não a correção."
 
 ## Bloco 8 — FinOps (1,5 min)
 
@@ -617,6 +616,11 @@ que esperar, não para decorar.
 ```bash
 kubectl -n solidarytech top pods
 ```
+
+> ⏱ Para o consumo aparecer **sob carga**, grave este trecho enquanto a carga do
+> drill (18 min) ainda roda. Se já tiver acabado, suba uma antes:
+> `NGO_ID=3 ./scripts/load-test.sh 20m 8`. Sem carga os números ficam em 1–2
+> milicores e o argumento de dimensionamento perde força.
 
 > **Falar**: "E dimensionamento com dado, não com chute. Esse é o consumo real
 > sob carga, pra comparar com o que eu reservei.
