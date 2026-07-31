@@ -381,7 +381,9 @@ aws dynamodb scan --table-name SolidaryTechVolunteers --region us-east-1 \
 ## Bloco 6 — Observabilidade e SRE (3 min)
 
 > ⏱ **Dispare o ensaio de MTTR num terminal separado ANTES deste bloco.** A
-> detecção leva uns 6 a 7 minutos e você volta nele no bloco 7.
+> detecção leva uns 6 a 7 minutos e você volta nele no bloco 7. (Se for gravar
+> pela opção B — narrar a linha do tempo já pronta — veja as instruções no
+> começo do bloco 7.)
 >
 > **Mate a carga do checklist primeiro** — o drill sobe a sua própria, e duas
 > juntas saturam o banco (foi o que invalidou a linha de base na rodada de 30/07):
@@ -480,12 +482,35 @@ Grafana → *Explore* → datasource **Loki** → `{namespace="solidarytech"}`
 
 ## Bloco 7 — Um incidente do início ao fim (2,5 min) ⭐
 
-Volte ao terminal do ensaio disparado no bloco 6.
+**Como gravar**: rode o ensaio **antes** e deixe terminar (leva ~10 min de
+relógio, com ~6 minutos de espera até o alerta). Depois grave numa tomada só,
+narrando a linha do tempo completa que ficou no terminal. Sem tempo morto, sem
+corte na edição.
 
-> **Falar**: "Tudo que eu mostrei está de pé e saudável. Agora eu quebro de
-> propósito, com cronômetro.
+```bash
+NGO_ID=3 BASELINE_SECS=120 ./scripts/mttr-drill.sh detect 18m 8
+```
+
+Enquanto ele roda, grave os blocos 8, 9 e 10 — nenhum depende do ensaio, e a
+carga que o drill sobe faz o `kubectl top pods` do bloco 8 mostrar consumo real.
+
+**Duas telas no bloco 7**:
+
+1. O **terminal** com a linha do tempo completa (é a evidência principal — tem
+   carimbo de hora em cada marco).
+2. O **Grafana**, no dashboard SRE, janela de 1 hora: o pico de latência **fica
+   no histórico** e continua visível depois que tudo normalizou.
+
+> ⚠️ Quando você gravar, o alerta já terá resolvido, então `localhost:9090/alerts`
+> **não** vai mostrar `DonationServiceHighLatencyP95` em vermelho. Não abra essa
+> tela prometendo o vermelho. A prova está no carimbo de hora do `ALERTA_FIRING`
+> no terminal e no pico do gráfico. Se quiser o vermelho ao vivo, é a opção de
+> gravar durante o ensaio — mas aí vêm os 6 minutos de espera junto.
+
+> **Falar**: "Tudo que eu mostrei está de pé e saudável. Então eu quebrei de
+> propósito, com cronômetro. Isso aqui é o resultado.
 >
-> O incidente é realista: eu derrubo o `ngo-service`, que é a dependência do
+> O incidente é realista: eu derrubei o `ngo-service`, que é a dependência do
 > caminho crítico. Aquela seta do começo do vídeo."
 
 > ✅ **O drill valida a própria medição.** Se a linha de base do p95 já estiver
@@ -559,6 +584,23 @@ que esperar, não para decorar.
 > O número parecia perfeitamente válido. Medição que não sabe dizer quando está
 > inválida é pior que não medir. Então agora o ensaio se recusa a rodar nessa
 > condição."
+
+> ℹ️ **Se abrir a tela de alertas, explique o que já está vermelho lá.** O
+> kube-prometheus-stack traz dezenas de regras próprias, e 4 ficam permanentemente
+> em firing neste cluster. Nenhuma é do projeto — vale citar, porque a banca vai
+> ver:
+>
+> - **`Watchdog`** e **`InfoInhibitor`**: disparam *sempre*, por desenho. O
+>   Watchdog é o alerta que prova que o pipeline de alertas está vivo; por isso a
+>   nossa config do Alertmanager manda ele para um receiver nulo (volta no bloco 9).
+> - **`KubeHpaMaxedOut`**: legítimo e a favor — o HPA do `donation-service` está no
+>   teto de 4 réplicas por causa da carga. É a prova de que ele escalou.
+> - **`CPUThrottlingHigh`** (severidade `info`): containers do node-exporter sendo
+>   limitados. Ruído conhecido de cluster pequeno.
+>
+> Para mostrar só os do projeto, use o campo **"Filter by rule name or labels"** e
+> digite `Donation`. Filtrar e explicar é melhor que rolar a tela torcendo para
+> ninguém perguntar.
 
 > ⚠️ **Não prometa o que não vai acontecer**: `SolidaryTechTargetDown` **não**
 > dispara nesse cenário (com zero réplicas a série `up` desaparece, e ausência não
