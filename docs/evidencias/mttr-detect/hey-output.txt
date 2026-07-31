@@ -2,49 +2,47 @@
 ==> Acompanhe o dashboard 'SolidaryTech - SRE Golden Metrics & SLO' no Grafana durante a execução.
 
 Summary:
-  Total:	1080.0003 secs
-  Slowest:	2.3753 secs
-  Fastest:	0.1279 secs
-  Average:	0.2786 secs
-  Requests/sec:	7459.6445
+  Total:	1080.1327 secs
+  Slowest:	2.3330 secs
+  Fastest:	0.1281 secs
+  Average:	0.2553 secs
+  Requests/sec:	31.3313
   
-  Total data:	2823496 bytes
-  Size/request:	125 bytes
+  Total data:	4294167 bytes
+  Size/request:	126 bytes
 
 Response time histogram:
   0.128 [1]	|
-  0.353 [20756]	|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
-  0.577 [37]	|
-  0.802 [13]	|
-  1.027 [8]	|
-  1.252 [74]	|
-  1.476 [5]	|
-  1.701 [0]	|
-  1.926 [2]	|
-  2.151 [1295]	|■■
-  2.375 [238]	|
+  0.349 [31717]	|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+  0.569 [17]	|
+  0.790 [16]	|
+  1.010 [36]	|
+  1.231 [96]	|
+  1.451 [10]	|
+  1.672 [8]	|
+  1.892 [1]	|
+  2.113 [5]	|
+  2.333 [1935]	|■■
 
 
 Latency distribution:
-  10%% in 0.1327 secs
-  25%% in 0.1334 secs
-  50%% in 0.1346 secs
-  75%% in 0.1371 secs
-  90%% in 0.1564 secs
-  95%% in 2.1297 secs
-  99%% in 2.1509 secs
+  10%% in 0.1322 secs
+  25%% in 0.1329 secs
+  50%% in 0.1339 secs
+  75%% in 0.1356 secs
+  90%% in 0.1459 secs
+  95%% in 2.1288 secs
+  99%% in 2.1356 secs
 
 Details (average, fastest, slowest):
-  DNS+dialup:	0.0000 secs, 0.0000 secs, 0.0044 secs
-  DNS-lookup:	0.0000 secs, 0.0000 secs, 0.0023 secs
-  req write:	0.0000 secs, 0.0000 secs, 0.0007 secs
-  resp wait:	0.2785 secs, 0.1279 secs, 2.3750 secs
-  resp read:	0.0001 secs, 0.0000 secs, 0.0022 secs
+  DNS+dialup:	0.0000 secs, 0.0000 secs, 0.0084 secs
+  DNS-lookup:	0.0000 secs, 0.0000 secs, 0.0019 secs
+  req write:	0.0000 secs, 0.0000 secs, 0.0328 secs
+  resp wait:	0.2551 secs, 0.1279 secs, 2.3329 secs
+  resp read:	0.0001 secs, 0.0000 secs, 0.0040 secs
 
 Status code distribution:
-  [201]	22429 responses
+  [201]	33842 responses
 
-Error distribution:
-  [8]	Post "http://localhost:8082/donations": EOF
-  [8033981]	Post "http://localhost:8082/donations": dial tcp [::1]:8082: connect: connection refused
+
 

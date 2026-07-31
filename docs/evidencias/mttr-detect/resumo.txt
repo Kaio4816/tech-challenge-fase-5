@@ -1,11 +1,11 @@
 # Ensaio de MTTR -- modo detect
 
-Executado em: 2026-07-25T20:29:44Z (UTC)
-Baseline p95: 21 ms | p95 final: 17 ms
+Executado em: 2026-07-31T03:45:20Z (UTC)
+Baseline p95: 14 ms | p95 final: 14 ms
 
-MTTD = 424s
-Serviço recuperado em +461s
-Holder liberado (selfHeal assume) em +424s
-MTTR = 656s (meta: < 300s)
+MTTD = 520s
+Serviço recuperado em +677s
+Holder liberado (selfHeal assume) em +520s
+MTTR = 847s (meta: < 300s)
 
 Alertas que dispararam: DonationServiceHighLatencyP95

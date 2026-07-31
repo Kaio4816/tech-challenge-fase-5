@@ -44,7 +44,7 @@ variable "github_org" {
 }
 
 variable "github_repo" {
-  description = "Nome do repositório GitHub (para a trust policy da role de CI). Placeholder até o repo existir — ver CLAUDE.md. Só usado quando create_github_actions_role = true."
+  description = "Nome do repositório GitHub, usado na trust policy da role de CI. Só relevante quando create_github_actions_role = true."
   type        = string
   default     = ""
 }

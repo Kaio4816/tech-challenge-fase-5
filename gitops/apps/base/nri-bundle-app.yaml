@@ -39,9 +39,8 @@ spec:
     server: https://kubernetes.default.svc
     namespace: monitoring
   syncPolicy:
-    # Sem automated: enquanto o Secret newrelic-license não existir (conta
-    # New Relic ainda pendente — ver CLAUDE.md), o app fica só criado e
-    # aguardando sync manual, sem entrar num loop de erro nem afetar as
-    # outras Applications.
+    # Sem automated de propósito: se o Secret newrelic-license não existir,
+    # o app fica criado aguardando sync manual, sem entrar em loop de erro
+    # nem afetar as outras Applications.
     syncOptions:
       - CreateNamespace=true

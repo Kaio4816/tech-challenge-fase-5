@@ -105,12 +105,12 @@ Os dados chegam ao New Relic por duas vias já implementadas na Fase 5:
 - **Infraestrutura Kubernetes** via `nri-bundle`
   (`gitops/apps/base/nri-bundle-app.yaml`) — alimenta `K8sContainerSample`.
 
-> **Status**: a conta New Relic é pendência externa (ver `CLAUDE.md`). Todo o
-> lado New Relic deste fluxo está implementado como código e revisado
-> (`terraform validate` limpo), mas ainda **não foi aplicado contra uma conta
-> real** — as condições e o Workflow nascem no primeiro `terraform apply` com
-> as credenciais acima. O lado Prometheus/Alertmanager, por outro lado, é
-> independente dessa pendência e funciona no cluster.
+> **Status**: aplicado na conta 8324859. Foram criadas 2 alert policies e 5
+> condições (3 estáticas + 2 baseline), e o tracing distribuído `donation → ngo`
+> está confirmado. O único recurso que não pôde ser criado é o
+> `newrelic_workflow` — o roteamento automático do alerta para e-mail: a API
+> responde `MISSING_ENTITLEMENT` no plano gratuito, mesmo com a conta já
+> ingerindo dados. É limitação de plano, não de implementação.
 
 ---
 

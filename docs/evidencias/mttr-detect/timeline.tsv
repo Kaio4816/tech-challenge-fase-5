@@ -1,12 +1,12 @@
-2026-07-25T20:16:43Z	INICIO_CARGA	load-test.sh 18m c=8
-2026-07-25T20:18:43Z	BASELINE_P95_MS	21
-2026-07-25T20:18:43Z	T0_INICIO_IMPACTO	kubectl scale deploy/ngo-service --replicas=0
-2026-07-25T20:18:45Z	HOLDER_ATIVO	re-aplicando replicas=0 a cada 10s até o primeiro alerta
-2026-07-25T20:18:47Z	FALHA_EFETIVA	ngo-service com 0 réplicas prontas	(+4s)
-2026-07-25T20:19:38Z	DEGRADACAO_P95	p95=1068ms (SLO=300ms)	(+54s)
-2026-07-25T20:25:47Z	ALERTA_FIRING	DonationServiceHighLatencyP95	(+423s)
-2026-07-25T20:25:47Z	T1_DETECCAO	primeiro alerta: DonationServiceHighLatencyP95	MTTD=424s
-2026-07-25T20:25:47Z	LIBERACAO	holder encerrado -- selfHeal do ArgoCD assume a recuperação
-2026-07-25T20:26:24Z	T3_RECUPERADO	conectividade restaurada	(+461)s
-2026-07-25T20:29:39Z	T4_FIM_IMPACTO	alertas resolvidos	MTTR=656s
-2026-07-25T20:29:40Z	P95_FINAL_MS	17
+2026-07-31T03:29:09Z	INICIO_CARGA	load-test.sh 18m c=8
+2026-07-31T03:31:10Z	BASELINE_P95_MS	14
+2026-07-31T03:31:10Z	T0_INICIO_IMPACTO	kubectl scale deploy/ngo-service --replicas=0
+2026-07-31T03:31:11Z	HOLDER_ATIVO	re-aplicando replicas=0 a cada 10s até o primeiro alerta
+2026-07-31T03:31:13Z	FALHA_EFETIVA	ngo-service com 0 réplicas prontas	(+3s)
+2026-07-31T03:32:16Z	DEGRADACAO_P95	p95=898ms (SLO=300ms)	(+65s)
+2026-07-31T03:39:50Z	ALERTA_FIRING	DonationServiceHighLatencyP95	(+519s)
+2026-07-31T03:39:50Z	T1_DETECCAO	primeiro alerta: DonationServiceHighLatencyP95	MTTD=520s
+2026-07-31T03:39:50Z	LIBERACAO	holder encerrado -- selfHeal do ArgoCD assume a recuperação
+2026-07-31T03:42:27Z	T3_RECUPERADO	conectividade restaurada	(+677)s
+2026-07-31T03:45:17Z	T4_FIM_IMPACTO	alertas resolvidos	MTTR=847s
+2026-07-31T03:45:17Z	P95_FINAL_MS	14

@@ -304,6 +304,7 @@ Implementado e **verificado contra a AWS real**: aplicações + Docker, CI/CD
 (apply e destroy limpos), GitOps (3 Applications `Healthy`/`Synced`, CD
 automático) e Disaster Recovery (ensaio completo, RTO 24min23s, RPO comprovado).
 
-Pendências: demo de MTTR cronometrada no cluster real e a conta New Relic
-(traces/AIOps já implementados, aguardando credencial) — ver `CLAUDE.md` e
+Pendência conhecida: o roteamento automático de alerta por e-mail no New Relic
+(`newrelic_workflow`) é bloqueado no plano gratuito. Policies, condições e
+tracing distribuído funcionam normalmente — ver
 [`docs/postmortem-mttr-demo.md`](docs/postmortem-mttr-demo.md).

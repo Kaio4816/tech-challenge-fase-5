@@ -225,5 +225,6 @@ RPO ≤ 1h comprovado com doações reais. Ver [`dr-plan.md`](dr-plan.md).
   VPC. Fora de escopo para o hackathon.
 - **`activate-dr.sh` depende do state em `us-east-1`**: ponto cego numa falha
   *total* da região primária, documentado em [`dr-plan.md`](dr-plan.md).
-- **New Relic pendente**: traces e AIOps estão implementados e prontos, mas
-  dependem de uma conta (pendência externa em `CLAUDE.md`).
+- **Workflow do New Relic bloqueado por plano**: policies e condições estão
+  aplicadas, mas o roteamento automático de alerta para e-mail
+  (`newrelic_workflow`) é recusado com `MISSING_ENTITLEMENT` no plano gratuito.

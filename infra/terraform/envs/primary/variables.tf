@@ -15,12 +15,12 @@ variable "name_prefix" {
 }
 
 variable "github_org" {
-  description = "Dono (usuário/organização) do repositório GitHub. Placeholder até o repo existir — ver CLAUDE.md."
+  description = "Dono (usuário/organização) do repositório GitHub, usado na trust policy OIDC do GitHub Actions."
   type        = string
 }
 
 variable "github_repo" {
-  description = "Nome do repositório GitHub. Placeholder até o repo existir — ver CLAUDE.md."
+  description = "Nome do repositório GitHub, usado na trust policy OIDC do GitHub Actions."
   type        = string
 }
 

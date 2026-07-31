@@ -67,9 +67,8 @@ jobs:
     name: SonarCloud
     runs-on: ubuntu-latest
     needs: test
-    # SonarCloud é uma dependência externa pendente (ver CLAUDE.md); o job só
-    # roda quando a organização e o token já estiverem configurados nas
-    # variáveis/segredos do repositório GitHub.
+    # Condicionado às variáveis do repositório: sem SONAR_ORGANIZATION o job
+    # fica skipped em vez de falhar, para o pipeline seguir em forks.
     if: ${{ vars.SONAR_ORGANIZATION != '' }}
     steps:
       - uses: actions/checkout@v4
