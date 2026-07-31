@@ -273,7 +273,7 @@ Abrir <https://sonarcloud.io/organizations/kaio4816/projects>.
 
 ### 3.5 — O commit que a esteira escreveu
 
-Abrir <https://github.com/Kaio4816/tech-challenge-fase-5/commit/c0149ca>.
+Abrir <https://github.com/Kaio4816/tech-challenge-fase-5/commit/4687cd2>.
 
 > **Falar**: "Esse é o último passo, e é o que explica o desenho todo. A esteira
 > não faz deploy. Ela faz um commit.
