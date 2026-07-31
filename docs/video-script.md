@@ -797,64 +797,95 @@ Aponte a **coluna `Type`**.
 
 ## Bloco 10 — Continuidade e recuperação de desastre (2 min)
 
-> **Falar**: "O pedido da diretoria era: mesmo que a nuvem falhe, as doações não
-> podem parar. Falha de região inteira é o pior caso, e é o que esse plano cobre.
+Seis paradas: cinco em [`dr-plan.md`](dr-plan.md) e uma no `activate-dr.sh`.
+
+> **Abertura** (sem nada específico na tela ainda): "O pedido da diretoria era:
+> mesmo que a nuvem falhe, as doações não podem parar. Falha de região inteira é o
+> pior caso, e é o que esse plano cobre.
 >
-> Rodar isso ao vivo levaria 25 minutos, então eu vou apresentar o ensaio que eu
+> Rodar isso ao vivo levaria 25 minutos, então eu vou mostrar o ensaio que eu
 > executei de verdade, com dados reais."
 
-**Na tela**: [`dr-plan.md`](dr-plan.md)
+---
 
-> **Falar**: "Eu escolhi a opção B do edital: contingência morna, com os mesmos
-> módulos Terraform na outra região.
+**① `dr-plan.md`, linha 10** — o título da seção
+`## Estratégia: Warm Standby via Terraform modularizado (Opção B do edital)`
+
+> "Eu escolhi a opção B do edital: contingência morna, com os mesmos módulos
+> Terraform na outra região.
 >
-> Mas repara: esse ambiente **não existe** no dia a dia. Ele é criado na hora. É a
-> decisão de custo do bloco anterior — deixar tudo parado esperando um desastre
-> custaria 145 dólares por mês.
->
-> Os dois números que definem qualquer plano de continuidade: quanto de dado eu
-> aceito perder, e quanto tempo eu aceito ficar fora. Aqui: até uma hora de dado,
-> e até uma hora fora.
->
-> E essa tabela é a parte que costuma faltar nos planos: **cada tipo de dado tem
+> Mas repara no detalhe: esse ambiente **não existe** no dia a dia. Ele é criado na
+> hora. É a decisão de custo do bloco anterior — deixar tudo parado esperando um
+> desastre custaria 145 dólares por mês."
+
+---
+
+**② Role até a tabela, linhas 21–26** — as quatro linhas de "Dado / Estratégia / RPO"
+
+> "E essa tabela é a parte que costuma faltar nos planos: **cada tipo de dado tem
 > uma estratégia diferente**.
 >
 > O banco vai por cópia tirada no momento da ativação, e não uma cópia velha de
-> ontem. O DynamoDB já é replicado continuamente, então perda praticamente zero.
-> As imagens já estão do outro lado antes de qualquer desastre. E a fila é
-> recriada vazia — essa perda eu aceito e declaro: perde-se notificação em
-> trânsito, não doação, porque a doação é gravada antes da mensagem sair."
+> ontem. O DynamoDB já é replicado continuamente, então perda praticamente zero. As
+> imagens já estão do outro lado antes de qualquer desastre.
+>
+> E a fila é recriada vazia — essa perda eu aceito e declaro: perde-se notificação
+> em trânsito, não doação. Porque a doação é gravada no banco **antes** de a
+> mensagem sair."
 
-**Na tela**: `scripts/activate-dr.sh`
+---
 
-> **Falar**: "E o plano é executável, não é documento de gaveta. É **um comando**.
+**③ Seções `## RPO` (linha 28) e `## RTO` (linha 54)** — mostre os dois títulos
+
+> "Os dois números que definem qualquer plano de continuidade: quanto de dado eu
+> aceito perder, e quanto tempo eu aceito ficar fora. Aqui: até uma hora de dado, e
+> até uma hora fora."
+
+---
+
+**④ Troque para `scripts/activate-dr.sh`, linhas 2–6** — o cabeçalho com as etapas
+
+> "E o plano é executável, não é documento de gaveta. É **um comando**.
+>
 > Ele tira a cópia do banco, manda pra outra região, cria a infraestrutura e sobe
 > as aplicações.
 >
 > Quem estiver de plantão às 3 da manhã não precisa lembrar de quatro
 > procedimentos. Precisa rodar um script."
 
-**Na tela**: seção "Resultado do ensaio" do `dr-plan.md`
+---
 
-> **Falar**: "E aqui o que separa plano escrito de plano testado.
+**⑤ Volte ao `dr-plan.md`, seção `## Resultado do ensaio` (linha 171)** — aponte
+os dois itens:
+
+- **linhas 182–187**: o RTO medido
+- **linhas 188–190**: a prova de RPO
+
+> "E aqui o que separa plano escrito de plano testado.
 >
 > Eu subi o ambiente, criei uma ONG e duas doações de verdade, simulei a perda da
 > região, rodei o script e cronometrei.
 >
 > **24 minutos e 23 segundos**, contra uma meta de uma hora. A parte lenta é criar
-> o cluster, uns 15 a 20 minutos. Não tem como acelerar isso sem pagar por
+> o cluster, uns 15 a 20 minutos — não tem como acelerar isso sem pagar por
 > ambiente parado.
 >
-> E a prova que interessa: eu consultei as doações na região de contingência, e as
-> duas voltaram inteiras. Mesmo id, mesmo valor, mesma data. Nenhum dado
-> transacional perdido.
->
-> Uma limitação que eu declaro em vez de esconder: o script lê informação que fica
-> guardada na região principal. Numa falha total dela, isso seria um ponto cego.
-> Por isso existe uma variável que pula essa leitura."
+> E a prova que interessa, essa linha aqui: eu consultei as doações na região de
+> contingência e as duas voltaram inteiras. Mesmo id, mesmo valor, mesma data.
+> Nenhum dado transacional perdido."
 
-> **Frase de fechamento**: "As duas doações criadas na região principal aparecem
-> na de contingência com o mesmo id e a mesma data. Nada foi perdido."
+---
+
+**⑥ Seção `## Limitações conhecidas` (linha 144)** — o primeiro item
+
+> "E uma limitação que eu declaro em vez de esconder: o script lê uma informação
+> que fica guardada na região principal. Numa falha total dela, isso seria um ponto
+> cego. Por isso existe uma variável de ambiente que pula essa leitura."
+
+---
+
+> **Frase de fechamento**: "As duas doações criadas na região principal aparecem na
+> de contingência com o mesmo id e a mesma data. Nada foi perdido."
 
 ## Bloco 11 — Encerramento (40 s)
 
