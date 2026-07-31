@@ -179,7 +179,15 @@ da esteira que interessa.
 
 ### 3.2 — O portão de segurança
 
-> **Falar** (abrindo o job do Trivy no YAML): "Esse job aqui é um portão. Três
+**Onde exatamente**: abra `.github/workflows/ci-donation-service.yml` no editor.
+O job do Trivy começa na **linha 144** (`scan-image:`) e as três linhas que você
+aponta são a **168, 169 e 170**.
+
+> ⚠️ Existe outro bloco com essas mesmas três linhas, nas **115–117**. Aquele é o
+> job `sca`, que escaneia as **dependências do código**. O que você quer é o das
+> 168–170, que escaneia a **imagem**. Apontar o errado desalinha a narrativa.
+
+> **Falar** (com as linhas 168–170 na tela): "Esse job aqui é um portão. Três
 > linhas definem ele.
 >
 > A primeira diz que só conta vulnerabilidade alta ou crítica. A segunda faz o
@@ -203,12 +211,50 @@ Abrir o **PR #1** → aba **Checks**.
 > e atualizar o Git. Eles **nem rodaram**. A imagem vulnerável não chegou no
 > registro, muito menos no cluster."
 
+> ⚠️ **Não diga que o merge está bloqueado.** No topo da página o GitHub mostra
+> **"Able to merge"** com check verde, porque a `main` não tem regra de proteção
+> exigindo os checks. Se você afirmar bloqueio de merge, a própria tela contradiz.
+> Fale só do que é verificável: o Trivy falhou e os dois jobs seguintes não
+> rodaram.
+>
+> Se quiser transformar em ponto a favor: *"o merge aqui ainda está liberado
+> porque eu não ativei proteção de branch neste repositório. Mas repara que isso
+> não muda o resultado: mesmo que alguém mergeasse, a imagem vulnerável não existe
+> no registro, porque o job que publica nunca rodou."*
+
+**Antes de abrir os Checks**: clique na setinha `>` ao lado de **"CI -
+donation-service"**, na coluna da esquerda, para expandir os 8 jobs. Sem isso a
+tela abre no SonarCloud, que está verde e não é o ponto.
+
 ### 3.3 — Sem senha guardada
 
-> **Falar** (abrindo o job de push): "Um detalhe de segurança. Para enviar a
-> imagem pra AWS não existe chave de acesso nenhuma guardada no GitHub. A
-> autenticação é por OIDC: o GitHub prova quem ele é, e a AWS entrega um crachá
-> temporário. Não tem senha para vazar."
+**Onde exatamente**: no mesmo arquivo, o job `push` começa na **linha 172**. Duas
+linhas importam:
+
+- **182** — `id-token: write`. É a permissão que deixa o GitHub emitir o token de
+  identidade. Sem ela, a autenticação sem senha não acontece.
+- **198** — `role-to-assume: ${{ vars.AWS_ECR_ROLE_ARN }}`. Aqui o que você aponta
+  é a **ausência**: não existe `aws-access-key-id` nem `aws-secret-access-key`.
+
+> **Falar**: "Um detalhe de segurança. Para enviar a imagem pra AWS não existe
+> chave de acesso nenhuma guardada no GitHub. A autenticação é por OIDC: o GitHub
+> prova quem ele é, e a AWS entrega um crachá temporário. Não tem senha para
+> vazar."
+
+**A prova que fecha o argumento** (rode na câmera, é mais forte que o YAML):
+
+```bash
+gh secret list
+gh variable list
+```
+
+Saída esperada: **um único segredo no repositório inteiro**, o `SONAR_TOKEN`. E o
+`AWS_ECR_ROLE_ARN` aparece em *variables*, não em *secrets*.
+
+> **Falar**: "Repara que o endereço do papel da AWS está em variáveis, não em
+> segredos. Porque ele não é segredo: saber o endereço não dá acesso a nada. Quem
+> autoriza é a política de confiança do lado da AWS, que só aceita token vindo
+> deste repositório."
 
 ### 3.4 — SonarCloud
 
