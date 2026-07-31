@@ -721,21 +721,55 @@ kubectl -n solidarytech top pods
 > A forma mais eficaz de reduzir tempo de recuperação não é responder mais rápido.
 > É fazer com que não tenha o que responder."
 
-**Na tela**: `infra/terraform/newrelic/main.tf` e depois as condições no New Relic
+**Na tela**: `infra/terraform/newrelic/main.tf`
 
-> **Falar**: "E aqui a parte de inteligência artificial que o edital pede. Essas
-> duas condições são do tipo **baseline**.
+**Quatro linhas, nesta ordem.** O argumento é a comparação entre as duas
+primeiras — role de uma para a outra, não aponte só a `baseline`:
+
+| Linha | Conteúdo | Por que mostrar |
+|---|---|---|
+| **66** | `type = "static"` | alerta comum: o limiar sou **eu** que escolhi |
+| **134** | `type = "baseline"` | limiar que a ferramenta **aprende** |
+| **146** | `baseline_direction = "upper_and_lower"` | desvio nos dois sentidos conta |
+| **147** | `signal_seasonality = "NEW_RELIC_CALCULATION"` | o "aprende" literal, no código |
+| **155** | `query = "... FROM Span WHERE ..."` | o dado vem do OTLP, não de agente APM |
+
+> **Falar**: "E aqui a parte de inteligência artificial que o edital pede.
 >
-> Em vez de eu dizer 'alerta acima de 300 milissegundos', o New Relic **aprende**
-> como o serviço se comporta normalmente e avisa quando ele foge do padrão.
+> Olha essas duas linhas. Nessa, o tipo é **estático**: o limiar sou eu que
+> escolhi, 300 milissegundos. Nessa outra, o tipo é **baseline**: o New Relic
+> aprende como o serviço se comporta normalmente e avisa quando ele foge do
+> padrão.
 >
-> A diferença é essa: alerta comum só existe depois que já teve erro. O baseline
-> dispara quando o comportamento **muda**, mesmo sem erro nenhum. Por exemplo, se
-> as doações simplesmente pararem de chegar num horário em que sempre chegam.
-> Nenhum alerta de erro pegaria isso, porque não tem erro.
+> A diferença prática é essa: alerta comum só existe depois que já teve erro. O
+> baseline dispara quando o comportamento **muda**, mesmo sem erro nenhum.
 >
-> E olha que isso é Terraform, não configuração clicada. Alerta configurado na mão
-> é alerta que se perde no próximo ambiente."
+> E repara nessa linha aqui, o `upper_and_lower`: eu monitoro desvio nos **dois**
+> sentidos. Pico é óbvio. Mas **queda** de doações é o pior cenário para uma ONG,
+> e é invisível para qualquer alerta de erro — porque não tem erro, simplesmente
+> parou de chegar dinheiro.
+>
+> Essa aqui, o `signal_seasonality`, é o 'aprende' literal: é o parâmetro que
+> manda a ferramenta calcular a sazonalidade do sinal.
+>
+> E o dado vem de `Span`. Não tem agente de APM: é o mesmo OTLP que gera o
+> rastreamento distribuído. Uma instrumentação só, servindo para o trace e para a
+> detecção de anomalia.
+>
+> E olha que isso tudo é Terraform, não configuração clicada. Alerta configurado
+> na mão é alerta que se perde no próximo ambiente."
+
+> 💡 **Se sobrar tempo**: as linhas **136–141** são a descrição da condição,
+> escrita em português dentro do próprio código, explicando por que
+> `upper_and_lower`. Vale um segundo de tela — mostra que a decisão está
+> documentada onde é aplicada, não num wiki à parte.
+
+**Depois, no New Relic**:
+<https://one.newrelic.com/alerts/condition-builder/condition-list>
+
+> **Falar**: "E aplicado na conta: cinco condições. Olha a coluna de tipo — duas
+> são **NRQL Baseline**, três são limiar fixo. É o mesmo contraste que eu acabei
+> de mostrar no código, agora rodando."
 
 > **Frase de fechamento**: "Detecção preditiva é o limiar aprendido, não o limiar
 > fixo. Ele dispara quando o comportamento muda, antes de a meta ser violada."
