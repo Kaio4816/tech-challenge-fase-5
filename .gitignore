@@ -21,3 +21,7 @@ coverage.out
 # .terraform.lock.hcl é versionado de propósito (pin de versão dos
 # providers) — não ignorar.
 **/backend.hcl
+
+# Lixo de sistema e planos do Terraform (binarios, nao versionar)
+.DS_Store
+tfplan
