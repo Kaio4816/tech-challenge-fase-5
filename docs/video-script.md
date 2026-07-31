@@ -576,32 +576,8 @@ separado no fim.
 curl -sS localhost:8082/donations | tail -c 300
 ```
 
-> ⚠️ **Use `-sS`, não `-s`.** O `-s` sozinho engole erro de conexão: se o túnel
-> cair, a saída vem **vazia** e parece banco sem doações — o oposto do que você
-> está tentando provar. Com `-sS` o erro aparece na tela.
-
-> ⚠️ **Rode este `curl` ANTES de disparar qualquer carga nova.** `GET /donations`
-> faz `SELECT` sem `LIMIT` (`apps/donation-service/main.go:262`). Com as centenas
-> de milhares de linhas que um teste de carga gera, o endpoint carrega tudo na
-> memória, estoura o limite de 128Mi do container e o pod é **`OOMKilled`** — a
-> conexão fecha e o `curl` devolve vazio. Aconteceu em 31/07, com 355.901 linhas.
->
-> Se acontecer na hora, limpe as doações do gerador de carga e mantenha as de
-> demonstração:
-> ```bash
-> kubectl -n solidarytech exec deploy/ngo-service -- python3 -c "
-> import os,psycopg2
-> u=os.environ['DATABASE_URL'].replace('ngo_db','donation_db')
-> c=psycopg2.connect(u); cur=c.cursor()
-> cur.execute(\"DELETE FROM donations WHERE donor_name = 'Load Test'\"); c.commit()
-> cur.execute('SELECT count(*) FROM donations'); print('restaram:', cur.fetchone()[0])"
-> ```
-
 > "E agora o que realmente importa: **nenhuma doação falhou**. Com a dependência
-> fora do ar, continua gravando normalmente.
->
-> *(Se preferir uma prova que não depende desse endpoint, o painel **Errors** do
-> Grafana em 0% durante todo o incidente mostra a mesma coisa, e é mais visual.)*
+> fora do ar, o serviço continua gravando normalmente.
 >
 > Porque a validação é *fail-open*: se o outro serviço cai, a doação é registrada
 > mesmo assim. Só um 'ONG não existe' explícito rejeita.
@@ -612,6 +588,34 @@ curl -sS localhost:8082/donations | tail -c 300
 >
 > Isso muda a forma de investigar: quem procurar erro aqui vai procurar no lugar
 > errado. Está escrito no runbook por causa disso."
+
+*Alternativa, se preferir não usar o terminal*: o painel **Errors** do dashboard
+SRE em 0% durante todo o incidente prova a mesma coisa e é mais visual.
+
+<details>
+<summary><b>⚠️ Se o comando devolver vazio — leia antes de gravar</b></summary>
+
+**Use `-sS`, não `-s`.** O `-s` engole erro de conexão: com o túnel caído a saída
+vem vazia e parece banco sem doações — o oposto do que você quer provar.
+
+**Rode este `curl` antes de disparar carga nova.** `GET /donations` faz `SELECT`
+sem `LIMIT` (`apps/donation-service/main.go:262`). Depois de um teste de carga o
+banco fica com centenas de milhares de linhas, o endpoint carrega tudo na memória,
+estoura os 128Mi do container e o pod é **`OOMKilled`** — a conexão fecha e o
+`curl` volta vazio. Ocorreu em 31/07 com 355.901 linhas.
+
+Limpeza (mantém as doações de demonstração):
+
+```bash
+kubectl -n solidarytech exec deploy/ngo-service -- python3 -c "
+import os,psycopg2
+u=os.environ['DATABASE_URL'].replace('ngo_db','donation_db')
+c=psycopg2.connect(u); cur=c.cursor()
+cur.execute(\"DELETE FROM donations WHERE donor_name = 'Load Test'\"); c.commit()
+cur.execute('SELECT count(*) FROM donations'); print('restaram:', cur.fetchone()[0])"
+```
+
+</details>
 
 ---
 
